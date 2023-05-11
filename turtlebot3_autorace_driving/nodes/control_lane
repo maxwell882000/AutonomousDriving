@@ -39,12 +39,16 @@ class ControlLane():
         self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
         self.pub_centered = rospy.Publisher('/control/centered', Bool, queue_size= 1)
         self.pub_stopped = rospy.Publisher('/control/stopped', Bool, queue_size= 1)
+        self.moving_mode = rospy.Subscriber("/control/traffic_light", Bool, self.trafficLight, queue_size= 1 )    
         self.is_moving = True
         self.is_centered = False
         self.lastError = 0
         self.MAX_VEL =SPEED
-
+        self.is_light = True
         rospy.on_shutdown(self.fnShutDown)
+
+    def trafficLight(self, light):
+        self.is_light = light.data
         
     def setMoving(self, is_moving):
         print("PUBlISH MOVEMENT {}".format( bool(is_moving.data)))
@@ -54,33 +58,34 @@ class ControlLane():
         self.MAX_VEL = max_vel_msg.data
 
     
-    def cbFollowLane(self, desired_center):            
-            center = desired_center.data
-            error = center - 500           
-          
-            Kp = 0.0025
-            Kd = 0.007
+    def cbFollowLane(self, desired_center): 
+        if self.is_light:           
+                center = desired_center.data
+                error = center - 500           
+            
+                Kp = 0.0025
+                Kd = 0.007
 
-            angular_z = Kp * error + Kd * (error - self.lastError)
-            self.lastError = error
-            if self.is_moving:
-                self.pub_stopped.publish(False)
-                self.pub_centered.publish( -0.06 < angular_z < 0.06 )
-                twist = Twist()
-                # twist.linear.x = 0.05        
-                try:
-                    twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
-                except:
-                    twist.linear.x = SPEED
-                twist.linear.y = 0
-                twist.linear.z = 0
-                twist.angular.x = 0
-                twist.angular.y = 0
-                twist.angular.z = -max(angular_z, -ROTATE) if angular_z < 0 else -min(angular_z, ROTATE)
-                self.pub_cmd_vel.publish(twist)
-            else:
-                self.fnShutDown()
-                self.pub_stopped.publish(True)
+                angular_z = Kp * error + Kd * (error - self.lastError)
+                self.lastError = error
+                if self.is_moving:
+                    self.pub_stopped.publish(False)
+                    self.pub_centered.publish( -0.06 < angular_z < 0.06 )
+                    twist = Twist()
+                    # twist.linear.x = 0.05        
+                    try:
+                        twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
+                    except:
+                        twist.linear.x = SPEED
+                    twist.linear.y = 0
+                    twist.linear.z = 0
+                    twist.angular.x = 0
+                    twist.angular.y = 0
+                    twist.angular.z = -max(angular_z, -ROTATE) if angular_z < 0 else -min(angular_z, ROTATE)
+                    self.pub_cmd_vel.publish(twist)
+                else:
+                    self.fnShutDown()
+                    self.pub_stopped.publish(True)
                 
     def fnShutDown(self,x= 0 ,  angle = 0):
         # rospy.loginfo("Shutting down. cmd_vel will be 0")
