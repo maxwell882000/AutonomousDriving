@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -33,15 +33,17 @@ class CoreModeDecider():
         self.pub_decided_mode = rospy.Publisher('/core/decided_mode', UInt8, queue_size=1)
 
         self.InvokedObject = Enum('InvokedObject', 'traffic_sign')
-        self.TrafficSign = Enum('TrafficSign', 'tunnel')
+        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right')
         self.CurrentMode = Enum('CurrentMode', 'idle lane_following tunnel')
 
         self.fnInitMode()
 
     # Invoke if traffic sign is detected
     def cbInvokedByTrafficSign(self, traffic_sign_type_msg):
-        rospy.loginfo("invoke sign")
+        rospy.loginfo("invoke sign : {} == {}".format(self.InvokedObject.traffic_sign.value,  traffic_sign_type_msg.data))
+    
         self.fnDecideMode(self.InvokedObject.traffic_sign.value, traffic_sign_type_msg)
+    
         rospy.loginfo("Traffic sign detected")
 
     def cbReturnedMode(self, mode):
@@ -63,7 +65,8 @@ class CoreModeDecider():
                     self.current_mode = self.CurrentMode.tunnel.value                
             else:
                 pass
-            self.fnPublishMode()                    
+            rospy.loginfo("Here : {}".format(self.current_mode))
+            # self.fnPublishMode()                    
         else:
             pass
 

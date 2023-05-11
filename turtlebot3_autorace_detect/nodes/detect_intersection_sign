@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -30,6 +30,8 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class DetectSign():
     def __init__(self):
+        cv2.__version__
+        self.counter = 1
         self.fnPreproc()
         
         self.sub_image_type = "raw" # you can choose image type "compressed", "raw"
@@ -54,8 +56,8 @@ class DetectSign():
             self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
 
         self.cvBridge = CvBridge()
-        self.TrafficSign = Enum('TrafficSign', 'intersection left right')
-        self.counter = 1
+        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right')
+        
 
     def fnPreproc(self):
         # Initiate SIFT detector
@@ -101,7 +103,7 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 9 #9
+        MIN_MATCH_COUNT = 4 #9
         MIN_MSE_DECISION = 50000
 
         # find the keypoints and descriptors with SIFT
@@ -114,29 +116,13 @@ class DetectSign():
         image_out_num = 1
 
         good_intersection = []
-        for m,n in matches_intersection:
-            if m.distance < 0.7*n.distance:
-                good_intersection.append(m)
-        if len(good_intersection)>MIN_MATCH_COUNT:
-            src_pts = np.float32([kp1[m.queryIdx].pt for m in good_intersection ]).reshape(-1,1,2)
-            dst_pts = np.float32([self.kp_intersection[m.trainIdx].pt for m in good_intersection]).reshape(-1,1,2)
-
-            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-            matches_intersection = mask.ravel().tolist()
-
-            mse = self.fnCalcMSE(src_pts, dst_pts)
-            if mse < MIN_MSE_DECISION:
-                msg_sign = UInt8()
-                msg_sign.data = self.TrafficSign.intersection.value
-
-                self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("detect intersection sign")
-                image_out_num = 2
 
         good_left = []
         for m,n in matches_left:
             if m.distance < 0.7*n.distance:
                 good_left.append(m)
+                
+    
         if len(good_left)>MIN_MATCH_COUNT:
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good_left ]).reshape(-1,1,2)
             dst_pts = np.float32([self.kp_left[m.trainIdx].pt for m in good_left]).reshape(-1,1,2)
@@ -150,7 +136,7 @@ class DetectSign():
                 msg_sign.data = self.TrafficSign.left.value
 
                 self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("detect left sign")
+                rospy.loginfo("detect left sign {}".format(msg_sign.data))
                 image_out_num = 3
 
         else:
@@ -161,6 +147,7 @@ class DetectSign():
         for m,n in matches_right:
             if m.distance < 0.7*n.distance:
                 good_right.append(m)
+                
         if len(good_right)>MIN_MATCH_COUNT:
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good_right ]).reshape(-1,1,2)
             dst_pts = np.float32([self.kp_right[m.trainIdx].pt for m in good_right]).reshape(-1,1,2)

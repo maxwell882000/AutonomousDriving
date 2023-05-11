@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Author: Leon Jung, Gilbert, Ashe Kim
+ 
+ 
+
+
+import rospy
+import numpy as np
+from std_msgs.msg import Float64, Bool, Int16
+from geometry_msgs.msg import Twist ,Vector3
+from sensor_msgs.msg import Image, CompressedImage
+from nav_msgs.msg import Odometry
+from turtlebot3_autorace_msgs.msg import MovingParam
+
+from tf.transformations import euler_from_quaternion
+
+import math
+
+YELLOW_RIGHT = 1
+WHITE_LEFT = 2
+
+class ControlAvoid():
+    def __init__(self):
+        rospy.loginfo("Started running")
+        # self.sub_avoid = rospy.Subscriber('/control/avoid', Int16, self.cbAvoidLane, queue_size=1)
+        self.vel_pub =  rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
+        self.sub_pose =  rospy.Subscriber("/odom", Odometry, self.get_turtle_angle)
+        self.pub_moving = rospy.Publisher('/control/moving/state', MovingParam, queue_size= 1)
+        self.sub_image_original = rospy.Subscriber('/detect/image_input', Image, self.turn_left, queue_size = 1)
+        self.turtle_angle = None
+
+        
+        
+    def get_turtle_angle(self,data):
+        orientation_quat = data.pose.pose.orientation
+        orientation_list = [orientation_quat.x, orientation_quat.y, orientation_quat.z, orientation_quat.w]
+        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
+        rospy.loginfo("Current orientation angle: {}".format(yaw))
+        self.turtle_angle = yaw
+        
+    # rotate turtel till given angle 
+    def rotate_turtle(self, target_angle):
+        target_angle = target_angle  # convert to radians
+        angular_speed = 0.5
+        tolerance = 0.01
+
+        while not rospy.is_shutdown():
+            if self.turtle_angle is None:
+                continue
+            
+            # calculate the difference between the target angle and the current angle
+            angle_difference = target_angle - self.turtle_angle
+            if angle_difference > math.pi:
+                angle_difference = angle_difference - 2 * math.pi
+            elif angle_difference < -math.pi:
+                angle_difference = angle_difference + 2 * math.pi
+
+            if abs(angle_difference) < tolerance:
+                # if the difference is within the tolerance, stop the turtle
+                self.vel_pub.publish(Twist())
+                break
+            
+            rospy.loginfo("Current : {}".format(angle_difference))
+            # rotate the turtle with the given angular speed
+            velocity_msg = Twist()
+            velocity_msg.angular.z = angular_speed if angle_difference > 0 else -angular_speed
+            self.vel_pub.publish(velocity_msg)
+
+    def move_turtle(self, value):
+        self.vel_pub.publish(Twist(linear=Vector3(x=value)))
+        
+    def cbAvoidLane(self):
+        # choice = desired_center.data
+        # if choice == YELLOW_RIGHT:
+        self.rotate_turtle(-90)
+        self.move_turtle(2)
+        self.rotate_turtle(90)
+
+    def turn_left(self, image_msg):
+        msg_moving = MovingParam()
+        msg_moving.moving_type = 3
+        msg_moving.moving_value_angular=90
+        msg_moving.moving_value_linear=4
+        rospy.loginfo("{}".format("started"))
+        self.pub_moving.publish(msg_moving)
+        
+    def main(self):
+        self.turn_left()
+        rospy.spin()
+
+if __name__ == '__main__':
+    rospy.init_node('control_avoid')
+    node = ControlAvoid()
+    node.main()

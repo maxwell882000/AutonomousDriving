@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+
+import rospy
+import cv2
+import numpy as np
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Twist
+from cv_bridge import CvBridge
+
+class LineFollower:
+    def __init__(self):
+        rospy.init_node('line_follower', anonymous=True)
+
+        self.bridge = CvBridge()
+
+        self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+        self.sub_image_original = rospy.Subscriber('/camera/image_projected_compensated', Image, self.image_callback, queue_size = 1)
+
+        self.hue_lower = rospy.get_param('~hue_lower', 20)
+        self.saturation_lower = rospy.get_param('~saturation_lower', 100)
+        self.value_lower = rospy.get_param('~value_lower', 100)
+        self.hue_upper = rospy.get_param('~hue_upper', 30)
+        self.saturation_upper = rospy.get_param('~saturation_upper', 255)
+        self.value_upper = rospy.get_param('~value_upper', 255)
+
+        self.linear_velocity = rospy.get_param('~linear_velocity', 0.2)
+        self.angular_velocity = rospy.get_param('~angular_velocity', 0.5)
+
+        self.image_width = 640
+        self.image_height = 480
+
+        self.dist_to_line = 0
+        self.line_coeffs = None
+
+    def image_callback(self, msg):
+        # Convert ROS Image message to OpenCV image
+        image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+        # Convert image to HSV color space
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        self.hsv_image = hsv_image
+
+        # Threshold the image to get only the yellow pixels
+        yellow_mask = cv2.inRange(hsv_image, (self.hue_lower, self.saturation_lower, self.value_lower), 
+                                  (self.hue_upper, self.saturation_upper, self.value_upper))
+
+        # Find the centroid of the yellow pixels
+        M = cv2.moments(yellow_mask)
+        if M['m00'] > 0:
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            center = (cx, cy)
+            cv2.circle(image, center, 10, (0, 255, 0), -1)
+            
+            self.line_coeffs = self.find_line_coeffs(center)
+            print(self.line_coeffs)
+            # Compute distance from robot to line
+            self.dist_to_line = self.calculate_distance_to_line(center)
+            print(self.dist_to_line)
+            # Compute line equation coefficients
+            
+
+
+
+    def find_line_coeffs(self, center):
+        # Convert center point to pixel coordinates
+        x, y = center
+        y = self.image_height - y
+
+        # Compute Hough lines using a binary image with only the yellow pixels
+        yellow_mask = cv2.inRange(self.hsv_image, (self.hue_lower, self.saturation_lower, self.value_lower), 
+                                (self.hue_upper, self.saturation_upper, self.value_upper))
+        edges = cv2.Canny(yellow_mask, 50, 200, apertureSize=3)
+        lines = cv2.HoughLines(edges, rho=1, theta=np.pi/180, threshold=100)
+
+        # Filter out lines that are not close to the center point
+        if lines is not None:
+            filtered_lines = []
+            for line in lines:
+                rho, theta = line[0]
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * (a))
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * (a))
+                dist = abs((y2 - y1)*x - (x2 - x1)*y + x2*y1 - y2*x1) / np.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+                if dist < 50:
+                    filtered_lines.append(line)
+
+            # Compute average line equation coefficients
+            if len(filtered_lines) > 0:
+                sum_rho = 0
+                sum_theta = 0
+                for line in filtered_lines:
+                    rho, theta = line[0]
+                    sum_rho += rho
+                    sum_theta += theta
+                avg_rho = sum_rho / len(filtered_lines)
+                avg_theta = sum_theta / len(filtered_lines)
+                a = np.cos(avg_theta)
+                b = np.sin(avg_theta)
+                x0 = a * avg_rho
+                y0 = b * avg_rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * (a))
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * (a))
+                return x1, y1, x2, y2
+
+        return None
+
+    def calculate_distance_to_line(self, center):
+        # Convert center point to pixel coordinates
+        x, y = center
+        y = self.image_height - y
+
+        # Compute distance from robot to line using the line equation
+        if self.line_coeffs is not None:
+            a, b, c = self.line_coeffs
+            dist = abs(a*x + b*y + c) / np.sqrt(a**2 + b**2)
+            return dist
+        else:
+            return
+        
+    def main(self):
+        rospy.spin()
+if __name__ == '__main__':
+    node = LineFollower()
+    node.main()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -149,7 +149,7 @@ class ControlMoving():
 
 
     def turn_left(self, msg):
-        rospy.loginfo("turn_left function is called")
+        # rospy.loginfo("turn_left function is called")
         if self.is_step_start == False:
             self.lastError = 0.0
             self.desired_theta = self.current_theta + math.radians(msg.moving_value_angular)
@@ -162,7 +162,7 @@ class ControlMoving():
             self.step_completed()
 
     def turn_right(self, msg):
-        rospy.loginfo("turn_right function is called")
+        # rospy.loginfo("turn_right function is called")
         if self.is_step_start == False:
             self.lastError = 0.0
             self.desired_theta = self.current_theta - math.radians(msg.moving_value_angular)
@@ -176,7 +176,6 @@ class ControlMoving():
 
 
     def go_forward(self, msg):
-        rospy.loginfo("go_forawrd function is called")
         if self.is_step_start == False:
             self.lastErorr = 0.0
             self.start_pos_x = self.current_pos_x

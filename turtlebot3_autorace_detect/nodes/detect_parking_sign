@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -54,7 +54,7 @@ class DetectSign():
             self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
 
         self.cvBridge = CvBridge()
-        self.TrafficSign = Enum('TrafficSign', 'parking')
+        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right')
         self.counter = 1
 
     def fnPreproc(self):
@@ -96,9 +96,9 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 9
+        MIN_MATCH_COUNT = 5
         MIN_MSE_DECISION = 50000
-
+       
         # find the keypoints and descriptors with SIFT
         kp1, des1 = self.sift.detectAndCompute(cv_image_input,None)
 
@@ -109,7 +109,8 @@ class DetectSign():
         for m,n in matches_parking:
             if m.distance < 0.7*n.distance:
                 good_parking.append(m)
-
+                
+        # print(len(good_parking))
         if len(good_parking)>MIN_MATCH_COUNT:
             src_pts = np.float32([ kp1[m.queryIdx].pt for m in good_parking ]).reshape(-1,1,2)
             dst_pts = np.float32([ self.kp_parking[m.trainIdx].pt for m in good_parking ]).reshape(-1,1,2)

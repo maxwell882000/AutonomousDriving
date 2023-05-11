@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -38,8 +38,8 @@ class CoreNodeController():
         self.pub_traffic_light_order = rospy.Publisher('/detect/traffic_light_order', UInt8, queue_size=1)
         self.pub_mode_return = rospy.Publisher('/core/returned_mode', UInt8, queue_size=1)
         self.pub_timer_start = rospy.Publisher('/detect/timer/start', Float64, queue_size= 1)
-
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following traffic_light')
+        # parking cycle traffic_light intersection
+        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
         self.current_mode = self.CurrentMode.idle.value
 
         self.StepOfTrafficLight = Enum('StepOfTrafficLight', 'searching_traffic_light in_traffic_light')    

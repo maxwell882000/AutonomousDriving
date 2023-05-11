@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -104,12 +104,12 @@ class ImageCompensation():
                 min_gray += 1
             
             max_gray = hist_size - 1
-            while accumulator[max_gray] >= (max - clip_hist_percent):
+            while max_gray in accumulator  and  accumulator[max_gray] >= (max - clip_hist_percent):
                 max_gray -= 1
 
         input_range = max_gray - min_gray
 
-        alpha = (hist_size - 1) / input_range
+        alpha = (hist_size - 1) / input_range if input_range !=0 else 1
         beta = -min_gray * alpha
 
         cv_image_compensated = cv2.convertScaleAbs(cv_image_compensated, -1, alpha, beta)
