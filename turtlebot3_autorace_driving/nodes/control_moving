@@ -71,7 +71,7 @@ class ControlMoving():
         msg_pub_max_vel.data = 0.05
         self.pub_max_vel.publish(msg_pub_max_vel)
 
-        loop_rate = rospy.Rate(100) # 10hz
+        loop_rate = rospy.Rate(60) # 10hz
         while not rospy.is_shutdown():
             if self.is_step_left == True:
                 self.turn_left(self.moving_msg)

@@ -27,6 +27,7 @@ from enum import Enum
 from std_msgs.msg import UInt8,Bool
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
+from constants import SIGNS
 
 class DetectSign():
     def __init__(self):
@@ -56,7 +57,6 @@ class DetectSign():
             self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
 
         self.cvBridge = CvBridge()
-        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right')
         self.counter = 1
         self.is_stopped = False
         
@@ -129,7 +129,7 @@ class DetectSign():
             if mse < MIN_MSE_DECISION:
                 msg_sign = UInt8()
                 
-                msg_sign.data = self.TrafficSign.cycle.value                
+                msg_sign.data = SIGNS.CYCLE               
                 self.pub_traffic_sign.publish(msg_sign)
                 rospy.loginfo("cycle")
                 image_out_num = 2

@@ -27,6 +27,7 @@ from enum import Enum
 from std_msgs.msg import UInt8
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
+from constants import SIGNS
 
 class DetectSign():
     def __init__(self):
@@ -121,7 +122,7 @@ class DetectSign():
             mse = self.fnCalcMSE(src_pts, dst_pts)
             if mse < MIN_MSE_DECISION:
                 msg_sign = UInt8()
-                msg_sign.data = self.TrafficSign.parking.value
+                msg_sign.data = SIGNS.PARKING
 
                 self.pub_traffic_sign.publish(msg_sign)
 

@@ -4,66 +4,63 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool,UInt8,Int32
 from enum import Enum
+from constants import SIGNS, TASK_PARTS
 from turtlebot3_autorace_msgs.msg import MovingParam
 
 class DetectObstacleToRight:
     def __init__(self) -> None:
         # Initialize ROS node
-        rospy.init_node('obstacle_detection_node', anonymous=True)
+       
         self.is_first = True
         # Subscribe to laser scan data
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.moving_mode = rospy.Publisher("/control/is_moving", Bool, queue_size= 1)
         self.sub_mode_control = rospy.Subscriber('/core/decided_mode', UInt8, self.cbReceiveMode, queue_size=1)
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
         self.pub_moving = rospy.Publisher('/control/moving/state', MovingParam, queue_size= 1)
         self.sub_moving_completed = rospy.Subscriber('/control/moving/complete', UInt8, self.cbMovingComplete, queue_size = 1)
         self.stopped_mode = rospy.Publisher("/control/stopped_obstacle", Bool, queue_size= 1)  
-        self.pub_flow_mode = rospy.Publisher('/core/flow_mode', Int32, queue_size=1)
-        self.sub_flow_mode = rospy.Subscriber('/core/flow_mode', Int32, self.setMode, queue_size=1)
+        self.pub_flow_task = rospy.Publisher('/core/flow_task', Int32, queue_size=1)
+        self.sub_flow_task = rospy.Subscriber('/core/flow_task', Int32, self.setTaskPart, queue_size=1)
         self.update_mode = rospy.Publisher("/control/update_lane", Bool, queue_size= 1)
         self.once = True
         self.go_forward = True
         self.stopped_once = True
         self.cycle_finished = False
-        self.mode = self.CurrentMode.idle.value
+        self.mode = SIGNS.IDLE
         self.is_moving_complete = False
         self.is_after_here = False
-        self.is_mode = 2
+        self.task_part = 2
         
     
     @property
     def is_parking(self):
-        return self.mode == self.CurrentMode.parking.value
+        return self.mode == SIGNS.PARKING
     
     @property
     def is_cycle(self):
-        return self.mode == self.CurrentMode.cycle.value
+        return self.mode ==SIGNS.CYCLE
     
     @property
     def is_left(self):
-        return self.mode == self.CurrentMode.left.value
+        return self.mode == SIGNS.LEFT
     
     @property
     def is_turn(self):
-        return self.mode == self.CurrentMode.left.value or \
-        self.mode == self.CurrentMode.right.value
+        return self.mode == SIGNS.LEFT or \
+        self.mode == SIGNS.RIGHT
         
-    def setMode(self, data):
-        print("IS MODE INCREASED {}".format(data.data))
-        self.is_mode = data.data
+    def setTaskPart(self, data):
+        self.task_part = data.data
     
    
-    
     def cbMovingComplete(self, data):
         self.is_moving_complete = True
         
     def cbReceiveMode(self, mode_msg):
-        rospy.loginfo("MODE {}".format(mode_msg.data))
         self.mode = mode_msg.data
         
         rospy.loginfo(self.is_left)
-        
+            
     def laser_callback(self, scan_msg):
         # Define the range of laser scan data to check for obstacles
         min_angle = -3.14 # radians
@@ -88,12 +85,22 @@ class DetectObstacleToRight:
             angle = scan_msg.angle_min + min_index * scan_msg.angle_increment
             # convert angle from radians to degrees
             angle_degrees = angle * 180.0 / 3.14
-            # process angle_degrees here
-        # Check if there is an obstacle to the right of the robot
-        # 
-        # print()
-        if not self.cycle_finished  and  ((self.is_mode == 2 or self.is_mode == 3) and self.is_cycle or self.is_first == False):
+
+    
+        self.cycle_sign(min_distance,angle_degrees)
         
+        self.big_turn(min_distance, angle_degrees)
+        
+        self.go_to_center_for_dynamic_turn(min_distance,angle_degrees)
+         
+        self.prepare_to_last_turn(min_distance,angle_degrees)
+        
+        self.parking_finished(min_distance)
+           
+        
+
+    def cycle_sign(self, min_distance, angle_degrees):
+        if not self.cycle_finished and (self.is_cycle or self.is_first == False):
             if (min_distance <= 0.32 and 83 <= angle_degrees <= 93 and self.is_first 
                 ) or (not self.is_first and 0.70 < min_distance < 0.90 and 260 < angle_degrees < 275):  # 0.5 meters
                 print(min_distance, angle_degrees)
@@ -101,10 +108,12 @@ class DetectObstacleToRight:
                 print("Obstacle detected to the right!")
                 if self.is_first == False: 
                     self.cycle_finished = True
-                    self.pub_flow_mode.publish(4)
-                self.is_first = False
-                
-        if self.is_mode == 4 and self.go_forward and 0.65 < min_distance < 0.76 and (12 > angle_degrees or angle_degrees > 355):
+                    self.pub_flow_task.publish(TASK_PARTS.BIG_PART)
+                self.is_first = False           
+
+    def big_turn(self, min_distance, angle_degrees):
+        if self.task_part == TASK_PARTS.BIG_PART and self.go_forward and 0.65 < min_distance < 0.76 \
+            and (12 > angle_degrees or angle_degrees > 355):
             self.go_forward = False
             print("Obstacle detected to the front detected!  {}  {}".format(min_distance , angle_degrees))
             rospy.loginfo("go straight")
@@ -133,21 +142,24 @@ class DetectObstacleToRight:
             self.is_moving_complete = False
             
             rospy.sleep(2)
-    
+
             self.stopped_mode.publish(True)
             
+    def parking_finished(self, min_distance):
+        if self.is_parking and min_distance < 0.15:
+            self.moving_mode.publish(False)
+        
+    def prepare_to_last_turn(self, min_distance, angle_degrees):
         if self.stopped_once and self.is_after_here and self.is_turn and 0.3 < min_distance < 0.38 and (20 > angle_degrees or angle_degrees > 355):
             print("IS stopped mode")
             self.stopped_once = False
             self.moving_mode.publish(False)
             self.stopped_mode.publish(True)
             
-        if self.is_parking and min_distance < 0.15:
-            self.moving_mode.publish(False)
-            
-        if self.is_mode >= 5 and self.once and 0.33 < min_distance < 0.37 and 135 < angle_degrees < 144:
+    def go_to_center_for_dynamic_turn(self, min_distance, angle_degrees):
+        if self.task_part == TASK_PARTS.BIG_PART and self.once and 0.33 < min_distance < 0.37 and 135 < angle_degrees < 144:
             self.once = False
-            print("here")
+
             self.is_after_here = True 
             self.moving_mode.publish(False)
             rospy.sleep(1)
@@ -201,21 +213,17 @@ class DetectObstacleToRight:
             
             rospy.sleep(3)
             
-            self.pub_flow_mode.publish(7)
+            self.pub_flow_task.publish(TASK_PARTS.TURNS)
             self.moving_mode.publish(True)
             self.update_mode.publish(True)
             # rospy.sleep(4)
-            
-            
-        else:
-            pass
-            # print("No obstacle detected.")
-      
+
     def main(self):
         
         # Spin the node
         rospy.spin()
         
 if __name__ == '__main__':
+    rospy.init_node('core_obstacle', anonymous=True)
     run = DetectObstacleToRight()
     run.main()

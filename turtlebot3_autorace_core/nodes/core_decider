@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+# Author: Leon Jung, Gilbert, Ashe Kim
+
+import rospy
+from enum import Enum
+from std_msgs.msg import UInt8, Int32
+from constants import  TASK_PARTS, SIGNS
+
+class CoreModeDecider():
+    def __init__(self):
+        # subscribes : invoking object detected
+        self.sub_traffic_sign  = rospy.Subscriber('/detect/traffic_sign', UInt8, self.fnDecideMode, queue_size=1)
+        self.sub_returned_mode = rospy.Subscriber('/core/returned_mode', UInt8, self.cbReturnedMode, queue_size=1)
+
+        # publishes : decided mode
+        self.pub_decided_mode = rospy.Publisher('/core/decided_mode', UInt8, queue_size=1)
+        
+        self.pub_flow_task = rospy.Publisher('/core/flow_task', Int32, queue_size=1)
+        
+        self.sub_flow_task = rospy.Subscriber('/core/flow_task', Int32, self.setFlowTask, queue_size=1)
+        
+        self.task_part = TASK_PARTS.START
+        
+        self.fnInitMode()
+
+    def setFlowTask(self, data):
+        self.task_part = data.data
+        
+    def cbReturnedMode(self, mode):
+        self.fnInitMode()
+
+    def fnInitMode(self):                                                   # starts only when the program is started initially or any mission is completed
+        self.current_mode = SIGNS.LANE_FOLLOWING
+        self.fnPublishMode()
+
+    def fnDecideMode(self, msg_data):                       # starts only when the traffic sign / traffic light is detected & current_mode is lane_following
+        if self.current_mode == SIGNS.LANE_FOLLOWING:
+    
+            if self.task_part == TASK_PARTS.START and msg_data.data == SIGNS.CYCLE:         # Parking Sign detected
+                rospy.loginfo("currentmode : cycle detected")
+                self.current_mode =  SIGNS.CYCLE
+            
+            if self.task_part == TASK_PARTS.PARKING and msg_data.data == SIGNS.PARKING:
+                rospy.loginfo("currentmode : parking detected")
+                self.current_mode =  SIGNS.PARKING
+                
+            if self.task_part == TASK_PARTS.TURNS and msg_data.data == SIGNS.LEFT:         # Parking Sign detected
+                rospy.loginfo("currentmode : left detected")
+                self.current_mode =  SIGNS.LEFT
+                    
+            if (self.task_part == TASK_PARTS.BIG_PART or self.task_part == TASK_PARTS.TURNS) \
+                and msg_data.data == SIGNS.RIGHT:      
+                rospy.loginfo("currentmode : right detected")
+                self.current_mode =  SIGNS.RIGHT
+    
+            
+            self.fnPublishMode()
+   
+
+    def fnPublishMode(self):
+        decided_mode = UInt8()
+        decided_mode.data = self.current_mode
+        self.pub_decided_mode.publish(decided_mode)
+        self.pub_flow_task.publish(self.task_part)
+        
+    def main(self):
+        rospy.spin()
+
+if __name__ == '__main__':
+    rospy.init_node('core_decider')
+    node = CoreModeDecider()
+    node.main()

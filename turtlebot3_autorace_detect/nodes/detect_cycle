@@ -45,8 +45,6 @@ class DetectCycling():
 
     def cbCyclingOrder(self, order):
         msg_pub_cycling_return = UInt8()
-        rospy.loginfo("DETECT CYCLE")
-
         rospy.loginfo("go straight")
         msg_moving = MovingParam()
         msg_moving.moving_type= 4
