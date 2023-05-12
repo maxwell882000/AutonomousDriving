@@ -27,7 +27,7 @@ from std_msgs.msg import UInt8, Float64,Bool
 from sensor_msgs.msg import Image, CompressedImage
 from dynamic_reconfigure.server import Server
 from turtlebot3_autorace_detect.cfg import DetectLaneParamsConfig
-
+from geometry_msgs.msg import Twist
 class DetectLane():
     def __init__(self):
         self.hue_white_l = rospy.get_param("~detect/lane/white/hue_l", 0)
@@ -90,7 +90,7 @@ class DetectLane():
         self.pub_white_line_reliability = rospy.Publisher('/detect/white_line_reliability', UInt8, queue_size=1)
         
         self.pub_max_vel = rospy.Publisher('/control/max_vel', Float64, queue_size = 1)
-
+        self.pub_cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size = 1)
         self.cvBridge = CvBridge()
 
         self.counter = 1
@@ -101,6 +101,45 @@ class DetectLane():
         self.reliability_white_line = 100
         self.reliability_yellow_line = 100
 
+
+        self.bridge = CvBridge()# Define color thresholds for lane detection
+        self.low_yellow = np.array([20, 100, 100])
+        self.high_yellow = np.array([30, 255, 255])# Define command speed and turning angles
+        self.linear_speed = 0.2
+        self.angular_speed = 0.5# Define image size and region of interest
+        self.IMAGE_WIDTH = 640
+        self.IMAGE_HEIGHT = 480
+        self.ROI_TOP = 350
+        self.ROI_BOTTOM = self.IMAGE_HEIGHT
+
+    def newImageDetection(self,img_msg):
+        img = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, self.low_yellow, self.high_yellow)
+        masked_image = cv2.bitwise_and(img, img, mask=mask)# Crop the image to region of interest
+        roi = masked_image[self.ROI_TOP:self.ROI_BOTTOM, 0:self.IMAGE_WIDTH]# Convert cropped image to grayscale and blur it
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0) # Apply Canny edge detection
+        edges = cv2.Canny(blur, 50, 150) # Find lane lines using Hough transform
+        lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 50, minLineLength=30, maxLineGap=50)
+        if lines is not None:
+            x_sum = 0
+            count = 0
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                x_sum += x1 + x2
+                count += 2
+                cv2.line(roi, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            center_x = int(x_sum / count)
+            error = center_x - self.IMAGE_WIDTH / 2
+            
+            angular_z = -error / 100.0
+            cmd_vel = Twist()
+            cmd_vel.linear.x = self.linear_speed
+            cmd_vel.angular.z = angular_z * self.angular_speed
+            self.pub_cmd_vel.publish(cmd_vel)
+            print(error)
+    
     def setUpdateLane(self, message):
         self.left_fit = None
         self.right_fit = None

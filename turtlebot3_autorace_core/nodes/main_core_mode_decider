@@ -41,7 +41,7 @@ class CoreModeDecider():
         self.is_mode = 2
         self.was_there = {}
         self.fnInitMode()
-
+        self.turn_count = 0
     # Invoke if traffic sign is detected
     def cbInvokedByTrafficSign(self, traffic_sign_type_msg):
         self.fnDecideMode(self.InvokedObject.traffic_sign.value, traffic_sign_type_msg)
@@ -69,17 +69,18 @@ class CoreModeDecider():
                 # if   msg_data.data == self.TrafficSign.traffic_light.value:         # Parking Sign detected
                 #     self.current_mode = self.CurrentMode.traffic_light.value
                 
-                if self.is_mode == -1 and msg_data.data == self.TrafficSign.parking.value:
+                if self.turn_count >= 2 or  (self.is_mode == -1 and msg_data.data == self.TrafficSign.parking.value):
                     rospy.loginfo("currentmode : parking detected")
                     self.current_mode = self.CurrentMode.parking.value
                     
                 if self.is_mode == 7 and msg_data.data == self.TrafficSign.left.value:         # Parking Sign detected
                     rospy.loginfo("currentmode : left detected")
                     self.current_mode = self.CurrentMode.left.value
-                        
+                    self.turn_count += 1
                 if (self.is_mode == 4 or self.is_mode ==7 )and msg_data.data == self.TrafficSign.right.value:         # Parking Sign detected
                     rospy.loginfo("currentmode : right detected")
                     self.current_mode = self.CurrentMode.right.value
+                    self.turn_count +=1 
             else:
                 pass
             
