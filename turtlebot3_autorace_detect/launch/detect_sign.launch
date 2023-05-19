@@ -46,8 +46,8 @@
       <remap from="/detect/image_output_sub2/compressed" to="/detect/image_yellow_light/compressed" />
       <remap from="/detect/image_output_sub3" to="/detect/image_green_light" />
       <remap from="/detect/image_output_sub3/compressed" to="/detect/image_green_light/compressed" />  
-  </node>
+  </node> -->
   
-  <node pkg="turtlebot3_autorace_detect" type="detect_obstacle" name="detect_obstacle" output="screen"/> -->
+  <node pkg="turtlebot3_autorace_detect" type="detect_obstacle" name="detect_obstacle" output="screen"/>
 
 </launch>

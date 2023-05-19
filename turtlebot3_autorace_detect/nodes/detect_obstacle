@@ -94,7 +94,7 @@ class DetectObstacleToRight:
         # print()
         if not self.cycle_finished  and  ((self.is_mode == 2 or self.is_mode == 3) and self.is_cycle or self.is_first == False):
         
-            if (min_distance <= 0.32 and 83 <= angle_degrees <= 93 and self.is_first 
+            if (min_distance <= 0.32 and 83 <= angle_degrees <= 100 and self.is_first 
                 ) or (not self.is_first and 0.70 < min_distance < 0.90 and 260 < angle_degrees < 275):  # 0.5 meters
                 print(min_distance, angle_degrees)
                 self.moving_mode.publish(False)
@@ -141,8 +141,9 @@ class DetectObstacleToRight:
             self.stopped_once = False
             self.moving_mode.publish(False)
             self.stopped_mode.publish(True)
-            
-        if self.is_parking and min_distance < 0.15:
+
+        print(angle_degrees)            
+        if self.is_parking and min_distance < 0.15 and (12 > angle_degrees or angle_degrees > 350):
             self.moving_mode.publish(False)
             
         if self.is_mode >= 5 and self.once and 0.33 < min_distance < 0.37 and 135 < angle_degrees < 144:

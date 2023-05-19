@@ -9,9 +9,9 @@ detect:
       lightness_l: 126
       lightness_h: 255
     yellow:
-      hue_l: 9
-      hue_h: 127
-      saturation_l: 70
-      saturation_h: 255
-      lightness_l: 95
-      lightness_h: 255
+      hue_l: 16
+      hue_h: 62
+      saturation_l: 0
+      saturation_h: 250
+      lightness_l: 10
+      lightness_h: 223

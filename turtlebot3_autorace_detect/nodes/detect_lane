@@ -528,7 +528,7 @@ class DetectLane():
         final = cv2.addWeighted(cv_image, 1, color_warp, 0.2, 0)
         final = cv2.addWeighted(final, 1, color_warp_lines, 1, 0)
         
-        # print( "{} {} {}".format(self.left_fitx[350] , self.right_fitx[350] , yellow_fraction))
+        print( "{} {} {}".format(self.left_fitx[350] , self.right_fitx[350] , yellow_fraction))
         if self.right_fitx[350] - 100  < self.left_fitx[350] < self.right_fitx[350] + 100:
             if  24000 < yellow_fraction < 27000:
                 centerx = np.subtract(self.right_fitx, 240) 
