@@ -82,11 +82,11 @@ class ImageProjection():
             # converts compressed image to opencv image
             np_image_original = np.frombuffer(msg_img.data, np.uint8)
             cv_image_original = cv2.imdecode(np_image_original, cv2.IMREAD_COLOR)
-            cv_image_original = cv2.rotate(cv_image_original, cv2.ROTATE_180)
+            # cv_image_original = cv2.rotate(cv_image_original, cv2.ROTATE_180)
         elif self.sub_image_type == "raw":
             # converts raw image to opencv image
             cv_image_original = self.cvBridge.imgmsg_to_cv2(msg_img, "bgr8")
-            cv_image_original = cv2.rotate(cv_image_original, cv2.ROTATE_180)
+            # cv_image_original = cv2.rotate(cv_image_original, cv2.ROTATE_180)
 
         # setting homography variables
         top_x = self.top_x

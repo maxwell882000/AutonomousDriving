@@ -70,13 +70,13 @@ class CoreNodeController():
         # move in lane 
         self.fnLaunch(self.Launcher.launch_control_lane.value, True)
 
-        self.fnLaunch(self.Launcher.launch_control_moving.value, True)
-        # 
-        self.fnLaunch(self.Launcher.launch_detect_cycling.value,  True)
-        # 
-        self.fnLaunch(self.Launcher.launch_detect_intersection.value, True)
+        # self.fnLaunch(self.Launcher.launch_control_moving.value, True)
+        # # 
+        # self.fnLaunch(self.Launcher.launch_detect_cycling.value,  True)
+        # # 
+        # self.fnLaunch(self.Launcher.launch_detect_intersection.value, True)
         
-        self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
+        # self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
         
         
     def fnLaunch(self, launch_num, is_start):
