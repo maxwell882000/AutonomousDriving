@@ -27,8 +27,8 @@ from turtlebot3_autorace_msgs.msg import MovingParam
 
 
 BIG_TURN = 2.0
-SPEED = 0.03
-ROTATE  = 0.3
+SPEED = 0.02
+ROTATE  = 0.05
 class ControlLane():
     def __init__(self):
         rospy.loginfo("Started running")
@@ -74,7 +74,7 @@ class ControlLane():
                     twist = Twist()
                     # twist.linear.x = 0.05        
                     try:
-                        twist.linear.x = max(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
+                        twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
                     except:
                         twist.linear.x = SPEED
                     twist.linear.y = 0
