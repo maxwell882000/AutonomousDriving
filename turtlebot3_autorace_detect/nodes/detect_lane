@@ -189,7 +189,7 @@ class DetectLane():
             # Unappropriate value of frame rate may cause huge delay on entire recognition process.
             # This is up to your computer's operating power.
             # rospy.sleep(1)
-            if self.counter % 10 != 0:
+            if self.counter % 3 != 0:
                 # if self.previous_msg is not None:
                 #     all = 0
                     # while all <= 10:
@@ -228,16 +228,16 @@ class DetectLane():
                 if white_fraction > 3000:
                     self.right_fitx, self.right_fit = self.sliding_windown(cv_white_lane, 'right')
                     self.mov_avg_right = np.array([self.right_fit])
-            if self.restart_line % 400 == 0:
-                if yellow_fraction > 3000:
-                        self.left_fitx, self.left_fit = self.sliding_windown(cv_yellow_lane, 'left')
-                        self.mov_avg_left = np.array([self.left_fit])
+            # if self.restart_line % 400 == 0:
+            #     if yellow_fraction > 3000:
+            #             self.left_fitx, self.left_fit = self.sliding_windown(cv_yellow_lane, 'left')
+            #             self.mov_avg_left = np.array([self.left_fit])
 
-                if white_fraction > 3000:
-                    self.right_fitx, self.right_fit = self.sliding_windown(cv_white_lane, 'right')
-                    self.mov_avg_right = np.array([self.right_fit])
-            else:
-                self.restart_line +=1 
+            #     if white_fraction > 3000:
+            #         self.right_fitx, self.right_fit = self.sliding_windown(cv_white_lane, 'right')
+            #         self.mov_avg_right = np.array([self.right_fit])
+            # else:
+            #     self.restart_line +=1 
             MOV_AVG_LENGTH = 5
 
             self.left_fit = np.array([np.mean(self.mov_avg_left[::-1][:, 0][0:MOV_AVG_LENGTH]),

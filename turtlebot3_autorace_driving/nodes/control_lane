@@ -27,8 +27,8 @@ from turtlebot3_autorace_msgs.msg import MovingParam
 
 
 BIG_TURN = 2.0
-SPEED = 0.02
-ROTATE  = 0.05
+SPEED = 0.05
+ROTATE  = 0.3
 class ControlLane():
     def __init__(self):
         rospy.loginfo("Started running")
@@ -43,7 +43,7 @@ class ControlLane():
         self.is_moving = True
         self.is_centered = False
         self.lastError = 0
-        self.MAX_VEL =0.15
+        self.MAX_VEL =0.1
         self.is_light = True
         rospy.on_shutdown(self.fnShutDown)
 
