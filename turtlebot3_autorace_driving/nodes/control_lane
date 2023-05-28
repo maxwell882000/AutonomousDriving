@@ -42,7 +42,7 @@ class ControlLane():
         self.moving_mode = rospy.Subscriber("/control/traffic_light", Bool, self.trafficLight, queue_size= 1 )    
         self.is_moving = True
         self.lastError = 0
-        self.MAX_VEL =SPEED
+        self.MAX_VEL = 0.1
         self.is_light = True
         rospy.on_shutdown(self.fnShutDown)
 
