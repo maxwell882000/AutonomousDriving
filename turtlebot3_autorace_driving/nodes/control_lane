@@ -77,7 +77,7 @@ class ControlLane():
                 twist.linear.z = 0
                 twist.angular.x = 0
                 twist.angular.y = 0
-                twist.angular.z = -max(angular_z, -ROTATE) if angular_z < 0 else -min(angular_z, ROTATE)
+                twist.angular.z = -max(angular_z, -0.38) if angular_z < 0 else -min(angular_z, 0.38)
                 self.pub_cmd_vel.publish(twist)
             else:
                 self.fnShutDown()
