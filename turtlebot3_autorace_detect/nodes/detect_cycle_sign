@@ -27,7 +27,7 @@ from enum import Enum
 from std_msgs.msg import UInt8,Bool
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
-from constants import SIGNS
+from turtlebot3_autorace_detect.constants import SIGNS
 
 class DetectSign():
     def __init__(self):

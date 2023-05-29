@@ -4,7 +4,7 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool,UInt8,Int32
 from enum import Enum
-from constants import SIGNS, TASK_PARTS
+from turtlebot3_autorace_core.constants import SIGNS, TASK_PARTS
 from turtlebot3_autorace_msgs.msg import MovingParam
 
 class DetectObstacleToRight:
@@ -12,6 +12,15 @@ class DetectObstacleToRight:
         # Initialize ROS node
        
         self.is_first = True
+        self.cycle_finished = False
+        self.once = True
+        self.go_forward = True
+        self.stopped_once = True
+       
+        self.mode = SIGNS.IDLE
+        self.is_moving_complete = False
+        self.is_after_here = False
+        self.task_part = 2
         # Subscribe to laser scan data
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.moving_mode = rospy.Publisher("/control/is_moving", Bool, queue_size= 1)
@@ -22,14 +31,7 @@ class DetectObstacleToRight:
         self.pub_flow_task = rospy.Publisher('/core/flow_task', Int32, queue_size=1)
         self.sub_flow_task = rospy.Subscriber('/core/flow_task', Int32, self.setTaskPart, queue_size=1)
         self.update_mode = rospy.Publisher("/control/update_lane", Bool, queue_size= 1)
-        self.once = True
-        self.go_forward = True
-        self.stopped_once = True
-        self.cycle_finished = False
-        self.mode = SIGNS.IDLE
-        self.is_moving_complete = False
-        self.is_after_here = False
-        self.task_part = 2
+
         
     
     @property

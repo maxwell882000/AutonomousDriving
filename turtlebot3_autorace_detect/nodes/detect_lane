@@ -247,7 +247,7 @@ class DetectLane():
         # Count the number of contours (lines)
         line_count = len(contours)
         if line_count == 1:
-            self.checkLineIsStraight(contours[0])
+            # self.checkLineIsStraight(contours[0])
             return line_count
         enough_seen = 0
         currentCountour = None
@@ -258,9 +258,9 @@ class DetectLane():
                 currentCountour = c
                 enough_seen +=1 
             
-            # if enough_seen >= 2 :
-            #     return 2
-        self.checkLineIsStraight(currentCountour)
+            if enough_seen >= 2 :
+                return 2
+        # self.checkLineIsStraight(currentCountour)
         return 1
     
     def checkLineIsStraight(self, contour):

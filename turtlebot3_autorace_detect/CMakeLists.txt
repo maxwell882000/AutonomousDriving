@@ -44,18 +44,13 @@ catkin_package(
 # Install
 ################################################################################
 catkin_install_python(PROGRAMS
-  nodes/detect_construction
-  nodes/detect_construction_sign
-  nodes/detect_intersection
-  nodes/detect_intersection_sign
-  nodes/detect_lane
-  nodes/detect_level_crossing
-  nodes/detect_level_crossing_sign
-  nodes/detect_parking
+  nodes/detect_cycle
+  nodes/detect_cycle_sign
   nodes/detect_parking_sign
+  nodes/detect_turn
+  nodes/detect_turn_sign
+  nodes/detect_lane
   nodes/detect_traffic_light
-  nodes/detect_tunnel
-  nodes/detect_tunnel_sign
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

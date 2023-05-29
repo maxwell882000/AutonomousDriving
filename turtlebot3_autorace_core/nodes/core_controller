@@ -45,8 +45,8 @@ class CoreNodeController():
 
             
     def initialNodes(self):
-        self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, True)
-        self.fnLaunch(self.Launcher.launch_detect_lane.value, True)
+        # self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, True)
+        # self.fnLaunch(self.Launcher.launch_detect_lane.value, True)
         self.fnLaunch(self.Launcher.launch_control_moving.value, True)
         self.fnLaunch(self.Launcher.launch_detect_cycling.value,  True)
         self.fnLaunch(self.Launcher.launch_detect_turn.value, True)

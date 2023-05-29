@@ -22,7 +22,7 @@
 import rospy
 from enum import Enum
 from std_msgs.msg import UInt8, Int32
-from constants import  TASK_PARTS, SIGNS
+from turtlebot3_autorace_core.constants import  TASK_PARTS, SIGNS
 
 class CoreModeDecider():
     def __init__(self):
