@@ -394,8 +394,9 @@ class DetectLane():
         # Generate x and y values for plotting
         ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
         lane_fitx = lane_fit[0] * ploty ** 2 + lane_fit[1] * ploty + lane_fit[2]
+        print(self.num_lines)
         if self.num_lines == 1:
-            if self.line_or_curve == "curve":
+            # if self.line_or_curve == "curve":
                 if lane_fit[0] > 0:
                     if left_or_right == "left":
                         print("LEFT")
@@ -408,15 +409,15 @@ class DetectLane():
                         self.missed_line = "left"
                         lane_fit =[]
                         self.reliability_yellow_line = 0
-            if self.line_or_curve == "line":
-                if self.line_right_or_left == "left":
-                        self.missed_line = "right"
-                        lane_fit = []
-                        self.reliability_white_line = 0
-                else: 
-                        self.missed_line = "left"
-                        lane_fit =[]
-                        self.reliability_yellow_line = 0
+            # if self.line_or_curve == "line":
+            #     if self.line_right_or_left == "left":
+            #             self.missed_line = "right"
+            #             lane_fit = []
+            #             self.reliability_white_line = 0
+            #     else: 
+            #             self.missed_line = "left"
+            #             lane_fit =[]
+            #             self.reliability_yellow_line = 0
         else:
             if self.missed_line == "left":
                 self.right_fit = self.sliding_windown(image, "left")
