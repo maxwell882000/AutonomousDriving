@@ -43,12 +43,12 @@ class ControlLane():
         self.is_moving = True
         self.is_centered = False
         self.lastError = 0
-        self.MAX_VEL =SPEED
+        self.MAX_VEL =0.05
         self.is_light = True
         rospy.on_shutdown(self.fnShutDown)
 
     def trafficLight(self, light):
-        self.is_light = light.data
+        self.is_light = bool(light.data)
         
     def setMoving(self, is_moving):
         print("PUBlISH MOVEMENT {}".format( bool(is_moving.data)))
@@ -74,7 +74,7 @@ class ControlLane():
                     twist = Twist()
                     # twist.linear.x = 0.05        
                     try:
-                        twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
+                        twist.linear.x = max(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), SPEED)
                     except:
                         twist.linear.x = SPEED
                     twist.linear.y = 0

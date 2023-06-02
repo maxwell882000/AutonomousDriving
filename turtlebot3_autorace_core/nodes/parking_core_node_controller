@@ -40,7 +40,7 @@ class CoreNodeController():
         self.pub_parking_order = rospy.Publisher('/detect/parking_order', UInt8, queue_size=1)   
         self.pub_mode_return = rospy.Publisher('/core/returned_mode', UInt8, queue_size=1)
 
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
+        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right stop')
         self.current_mode = self.CurrentMode.idle.value
 
             

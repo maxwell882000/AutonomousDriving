@@ -39,7 +39,7 @@ class CoreNodeController():
         self.pub_intersection_order = rospy.Publisher('/detect/intersection_order', UInt8, queue_size=1)
         self.pub_mode_return = rospy.Publisher('/core/returned_mode', UInt8, queue_size=1)
         
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
+        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right stop')
         self.current_mode = self.CurrentMode.idle.value
         
         self.StepOfIntersection = Enum('StepOfIntersection', 'right left exit')
@@ -66,7 +66,9 @@ class CoreNodeController():
         
     def cbReceiveMode(self, mode_msg):
         rospy.loginfo("starts the progress with %d", mode_msg.data)
-        self.current_mode = mode_msg.data
+        if self.current_mode != self.CurrentMode.left \
+            or self.current_mode != self.CurrentMode.right:
+            self.current_mode = mode_msg.data
 
     def cbIntersectionStamped(self, intersection_msg):
         print("IS IT HERE")

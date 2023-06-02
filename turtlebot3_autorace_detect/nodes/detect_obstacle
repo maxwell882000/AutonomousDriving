@@ -15,7 +15,7 @@ class DetectObstacleToRight:
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.moving_mode = rospy.Publisher("/control/is_moving", Bool, queue_size= 1)
         self.sub_mode_control = rospy.Subscriber('/core/decided_mode', UInt8, self.cbReceiveMode, queue_size=1)
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
+        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right stop')
         self.pub_moving = rospy.Publisher('/control/moving/state', MovingParam, queue_size= 1)
         self.sub_moving_completed = rospy.Subscriber('/control/moving/complete', UInt8, self.cbMovingComplete, queue_size = 1)
         self.stopped_mode = rospy.Publisher("/control/stopped_obstacle", Bool, queue_size= 1)  
@@ -30,8 +30,8 @@ class DetectObstacleToRight:
         self.is_moving_complete = False
         self.is_after_here = False
         self.is_mode = 2
-        
-    
+        self.stop_sign_once = True
+   
     @property
     def is_parking(self):
         return self.mode == self.CurrentMode.parking.value
@@ -91,50 +91,94 @@ class DetectObstacleToRight:
             # process angle_degrees here
         # Check if there is an obstacle to the right of the robot
         # 
-        # print()
-        if not self.cycle_finished  and  ((self.is_mode == 2 or self.is_mode == 3) and self.is_cycle or self.is_first == False):
+        print(angle_degrees, min_distance , self.is_mode, self.is_first )
+        if not self.cycle_finished  and  (self.is_cycle or self.is_first == False):
         
-            if (min_distance <= 0.32 and 83 <= angle_degrees <= 93 and self.is_first 
-                ) or (not self.is_first and 0.70 < min_distance < 0.90 and 260 < angle_degrees < 275):  # 0.5 meters
+            if (min_distance <= 0.17 and 46 <= angle_degrees <= 55 and self.is_first 
+                ) or (not self.is_first and 1.04 < min_distance < 1.3 and 270 < angle_degrees < 300):  # 0.5 meters
                 print(min_distance, angle_degrees)
                 self.moving_mode.publish(False)
-                print("Obstacle detected to the right!")
                 if self.is_first == False: 
                     self.cycle_finished = True
-                    self.pub_flow_mode.publish(4)
-                self.is_first = False
+                    self.pub_flow_mode.publish(-10)
+                if self.is_first == False:
+                    self.is_first = None
+                print("Obstacle detected to thae right!")
                 
-        if self.is_mode == 4 and self.go_forward and 0.65 < min_distance < 0.76 and (12 > angle_degrees or angle_degrees > 355):
-            self.go_forward = False
-            print("Obstacle detected to the front detected!  {}  {}".format(min_distance , angle_degrees))
-            rospy.loginfo("go straight")
-                        
-            msg_moving = MovingParam()
-            msg_moving.moving_type=2
-            msg_moving.moving_value_angular= angle_degrees - 12  if angle_degrees < 20 else 0
-            self.pub_moving.publish(msg_moving)
+                if self.is_first == True:
+                    self.is_first = False
+                    
+        if self.is_mode == -10 and self.stop_sign_once and min_distance <= 0.3 and (45 < angle_degrees < 55):
+            self.pub_flow_mode.publish(4)
+            self.stop_sign_once = False
             self.moving_mode.publish(False)
-            while True:
-                if self.is_moving_complete == True:
-                    break
-            self.is_moving_complete = False
             
-            rospy.sleep(2)
+        if self.is_mode == 4 and self.go_forward and 0.57 < min_distance < 0.60 and (88 < angle_degrees < 93):
+            self.go_forward = False
+            print("Obstacle detected to the front detected! turn with obttacle  {}  {}".format(min_distance , angle_degrees))
+            rospy.loginfo("go straight")
+            self.moving_mode.publish(False)
+        
+            
+            rospy.sleep(1)
             
             msg_moving = MovingParam()
             msg_moving.moving_type=4
             msg_moving.moving_value_angular=0
-            msg_moving.moving_value_linear= 0.3
+            msg_moving.moving_value_linear= 0.4
             self.pub_moving.publish(msg_moving)
             
+            rospy.sleep(6)
+        
             while True:
                 if self.is_moving_complete == True:
                     break
             self.is_moving_complete = False
             
-            rospy.sleep(2)
-    
-            self.stopped_mode.publish(True)
+            
+
+            rospy.loginfo("go right")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=3
+            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_linear=0.0
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
+
+            rospy.sleep(1)
+
+            rospy.loginfo("go straight")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=4
+            msg_moving.moving_value_angular=0
+            msg_moving.moving_value_linear=0.24
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
+        
+            rospy.sleep(1)
+            
+            rospy.loginfo("go left")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=2
+            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_linear=0.0
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
+
+            rospy.sleep(1)
+            
+            self.pub_flow_mode.publish(5)
+            self.is_first = False
+            self.moving_mode.publish(True)
             
         if self.stopped_once and self.is_after_here and self.is_turn and 0.3 < min_distance < 0.38 and (20 > angle_degrees or angle_degrees > 355):
             print("IS stopped mode")
@@ -145,7 +189,7 @@ class DetectObstacleToRight:
         if self.is_parking and min_distance < 0.15:
             self.moving_mode.publish(False)
             
-        if self.is_mode >= 5 and self.once and 0.33 < min_distance < 0.37 and 135 < angle_degrees < 144:
+        if self.is_mode == 5 and self.once and min_distance < 0.28 and (20 > angle_degrees or angle_degrees > 355):
             self.once = False
             print("here")
             self.is_after_here = True 
@@ -168,7 +212,7 @@ class DetectObstacleToRight:
             print("GO FORWARD")
             msg_moving = MovingParam()
             msg_moving.moving_type= 4
-            msg_moving.moving_value_linear= 0.2
+            msg_moving.moving_value_linear= 0.32
             self.pub_moving.publish(msg_moving)
             
             while True:
@@ -204,9 +248,9 @@ class DetectObstacleToRight:
             self.pub_flow_mode.publish(7)
             self.moving_mode.publish(True)
             self.update_mode.publish(True)
-            # rospy.sleep(4)
-            
-            
+            rospy.sleep(10)
+            self.moving_mode.publish(False)
+            self.stopped_mode.publish(True)
         else:
             pass
             # print("No obstacle detected.")

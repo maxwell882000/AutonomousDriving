@@ -54,7 +54,7 @@ class DetectSign():
             self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
 
         self.cvBridge = CvBridge()
-        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right')
+        self.TrafficSign = Enum('TrafficSign', 'idle lane_following parking cycle traffic_light intersection left right stop')
         self.counter = 1
 
     def fnPreproc(self):
@@ -96,7 +96,7 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 5
+        MIN_MATCH_COUNT = 9
         MIN_MSE_DECISION = 50000
        
         # find the keypoints and descriptors with SIFT
@@ -133,30 +133,30 @@ class DetectSign():
             rospy.loginfo("nothing")
 
 
-        if image_out_num == 1:
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_input, "jpg"))
+        # if image_out_num == 1:
+        #     if self.pub_image_type == "compressed":
+        #         # publishes traffic sign image in compressed type
+        #         self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_input, "jpg"))
 
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
+        #     elif self.pub_image_type == "raw":
+        #         # publishes traffic sign image in raw type
+        #         self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
 
-        elif image_out_num == 2:
-            draw_params = dict(matchColor = (255,0,0), # draw matches in green color
-                            singlePointColor = None,
-                            matchesMask = matchesMask_parking, # draw only inliers
-                            flags = 2)
+        # elif image_out_num == 2:
+        #     draw_params = dict(matchColor = (255,0,0), # draw matches in green color
+        #                     singlePointColor = None,
+        #                     matchesMask = matchesMask_parking, # draw only inliers
+        #                     flags = 2)
 
-            final_parking = cv2.drawMatches(cv_image_input,kp1,self.img_parking,self.kp_parking,good_parking,None,**draw_params)
+        #     final_parking = cv2.drawMatches(cv_image_input,kp1,self.img_parking,self.kp_parking,good_parking,None,**draw_params)
 
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_parking, "jpg"))
+        #     if self.pub_image_type == "compressed":
+        #         # publishes traffic sign image in compressed type
+        #         self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_parking, "jpg"))
 
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_parking, "bgr8"))
+        #     elif self.pub_image_type == "raw":
+        #         # publishes traffic sign image in raw type
+        #         self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_parking, "bgr8"))
 
 
     def main(self):

@@ -45,19 +45,10 @@ class CoreNodeController():
         self.launch_detect_intersection_launched = False
 
         
-        self.sub_returned_mode = rospy.Subscriber('/core/main_cycle', Bool, self.cycleNodes, queue_size=1)
-
 
         self.initialNodes()
 
-    def cycleNodes(self, is_cycle):
-        rospy.loginfo("Started cycle Nodes {}".format(is_cycle))
-        # rospy.sleep(3)
-        # if not is_cycle:
-            
-        #     self.fnLaunch(self.Launcher.launch_detect_cycling.value,  False)
-            
-            
+
     def initialNodes(self):
         
         # external cammera
@@ -68,7 +59,7 @@ class CoreNodeController():
         
         # detect sign
         # move in lane 
-        self.fnLaunch(self.Launcher.launch_control_lane.value, True)
+        
 
         self.fnLaunch(self.Launcher.launch_control_moving.value, True)
         # 
@@ -78,6 +69,7 @@ class CoreNodeController():
         
         self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
         
+        self.fnLaunch(self.Launcher.launch_control_lane.value, True)
         
     def fnLaunch(self, launch_num, is_start):
         if launch_num == self.Launcher.launch_camera_ex_calib.value:

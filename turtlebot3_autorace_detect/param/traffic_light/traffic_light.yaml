@@ -9,16 +9,16 @@ detect:
       lightness_l: 123
       lightness_h: 250
     yellow:
-      hue_l: 19
-      hue_h: 33
-      saturation_l: 237
+      hue_l: 0
+      hue_h: 61
+      saturation_l: 175
       saturation_h: 255
-      lightness_l: 231
+      lightness_l: 143
       lightness_h: 255
     green:
-      hue_l: 40
-      hue_h: 113
-      saturation_l: 210
+      hue_l: 39
+      hue_h: 97
+      saturation_l: 236
       saturation_h: 255
-      lightness_l: 131
-      lightness_h: 255
+      lightness_l: 48
+      lightness_h: 218

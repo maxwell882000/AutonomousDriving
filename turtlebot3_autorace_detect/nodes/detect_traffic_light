@@ -89,12 +89,15 @@ class DetectTrafficLight():
 
 
         self.sub_traffic_light_finished = rospy.Subscriber('/control/traffic_light_finished', UInt8, self.cbTrafficLightFinished, queue_size = 1)
-
+        def setHalfs(msg):
+            self.first_half = False
+        rospy.Subscriber('/core/second_half', Bool, setHalfs, queue_size=1)
+        
         self.pub_traffic_light_return = rospy.Publisher('/detect/traffic_light_stamped', UInt8, queue_size=1)
         self.pub_parking_start = rospy.Publisher('/control/traffic_light_start', UInt8, queue_size = 1)
         self.pub_traffic_light = rospy.Publisher('/detect/traffic_light', UInt8, queue_size=1)
         self.moving_mode = rospy.Publisher("/control/traffic_light", Bool, queue_size= 1 )
-        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right')
+        self.CurrentMode = Enum('CurrentMode', 'idle lane_following parking cycle traffic_light intersection left right stop')
     
         self.cvBridge = CvBridge()
         self.cv_image = None
@@ -107,6 +110,7 @@ class DetectTrafficLight():
         self.red_count = 0
         self.stop_count = 0
         self.off_traffic = False
+        self.first_half = True
         rospy.sleep(1)
 
         loop_rate = rospy.Rate(10)
@@ -217,17 +221,19 @@ class DetectTrafficLight():
                     self.stop_count = 0
 
         if self.green_count >= 3:
+            self.yellow_count = 0
             rospy.loginfo("GREEN")
             cv2.putText(self.cv_image,"GREEN", (self.point_col, self.point_low), cv2.FONT_HERSHEY_DUPLEX, 0.5, (80, 255, 0))
             msg_sign = UInt8()
             msg_sign.data = self.CurrentMode.lane_following.value
-
+            
             self.pub_traffic_light.publish(msg_sign)
             self.moving_mode.publish(True)
-            self.is_traffic_light_finished = True
+            # self.is_traffic_light_finished = True
             
 
         if self.yellow_count >= 3:
+            self.red_count  = 0
             rospy.loginfo("YELLOW")
             cv2.putText(self.cv_image,"YELLOW", (self.point_col, self.point_low), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 255))
 
@@ -382,18 +388,34 @@ class DetectTrafficLight():
         keypts=det.detect(mask)
         frame=cv2.drawKeypoints(self.cv_image,keypts,np.array([]),(0,255,255),cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-        col1 = 180
-        col2 = 270
-        col3 = 305
 
-        low1 = 50
-        low2 = 170
-        low3 = 170
+        if self.first_half:
+            col1 = 50
+            col2 = 120
+            col3 = 150
+
+            low1 = 90
+            low2 = 140
+            low3 = 170
+        else:
+            col1 = 200
+            col2 = 270
+            col3 = 305
+
+            low1 = 50
+            low2 = 170
+            low3 = 170
         
         # if detected more than 1 light
+        
+        # red 103 101 
+        # yellow 94 118
+        # green 96 140
         for i in range(len(keypts)):
             self.point_col = int(keypts[i].pt[0])
             self.point_low = int(keypts[i].pt[1])
+            print(len(keypts) , keypts, find_color , self.point_col, self.point_low, self.first_half)
+            # print(self.point_col, self.point_low)
             if self.point_col > col1 and self.point_col < col2 and self.point_low > low1 and self.point_low < low2:
                 if find_color == 'green':
                     status = 1
