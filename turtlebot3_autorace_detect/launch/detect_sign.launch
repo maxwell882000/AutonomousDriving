@@ -25,12 +25,14 @@
       <remap from="/detect/image_output/compressed" to="/detect/image_traffic_sign/compressed" />    
     </node>
 
-    <node pkg="turtlebot3_autorace_detect" type="detect_parking_sign" name="detect_parking_sign" output="screen">
+    <node pkg="turtlebot3_autorace_detect" type="detect_stop_sign" name="detect_stop_sign" output="screen">
       <remap from="/detect/image_input" to="/camera/image_compensated" />
       <remap from="/detect/image_input/compressed" to="/camera/image_compensated/compressed" />
       <remap from="/detect/image_output" to="/detect/image_traffic_sign" />
       <remap from="/detect/image_output/compressed" to="/detect/image_traffic_sign/compressed" />    
     </node>
+
+    
 
     <!-- <node pkg="turtlebot3_autorace_detect" type="detect_traffic_light" name="detect_traffic_light" output="screen">
       <rosparam command="load" file="$(find turtlebot3_autorace_detect)/param/traffic_light/traffic_light.yaml" />

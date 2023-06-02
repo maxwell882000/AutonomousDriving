@@ -40,7 +40,7 @@ class CoreNodeController():
         self.launch_control_moving_launched = False
         self.launch_detect_cycling_launched = False
         self.launch_detect_turn_launched = False        
-        self.launch_detect_traffic_light = False
+        self.launch_detect_traffic_light_launched = False
         
         self.initialNodes()
 
@@ -184,16 +184,16 @@ class CoreNodeController():
             
         elif launch_num == self.Launcher.launch_detect_traffic_light.value:
             if is_start == True:
-                if self.launch_detect_traffic_light == False:
+                if self.launch_detect_traffic_light_launched == False:
                     self.launch_detect_traffic_light = roslaunch.scriptapi.ROSLaunch()
                     self.launch_detect_traffic_light = roslaunch.parent.ROSLaunchParent(self.uuid, [self.ros_package_path + "turtlebot3_autorace_detect/launch/detect_traffic_light.launch"])
-                    self.launch_detect_traffic_light = True
+                    self.launch_detect_traffic_light_launched = True
                     self.launch_detect_traffic_light.start()
                 else:
                     pass
             else:
-                if self.launch_detect_traffic_light == True:
-                    self.launch_detect_traffic_light = False
+                if self.launch_detect_traffic_light_launched == True:
+                    self.launch_detect_traffic_light_launched = False
                     self.launch_detect_traffic_light.shutdown()
                 pass
     def main(self):

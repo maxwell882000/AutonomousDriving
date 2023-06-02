@@ -20,7 +20,7 @@ class DetectObstacleToRight:
         self.mode = SIGNS.IDLE
         self.is_moving_complete = False
         self.is_parking_turn = False
-        self.task_part = 2
+        self.task_part = TASK_PARTS.BIG_PART
         # Subscribe to laser scan data
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.moving_mode = rospy.Publisher("/control/is_moving", Bool, queue_size= 1)
@@ -123,7 +123,7 @@ class DetectObstacleToRight:
 
     def stop_sign(self, min_distance, angle_degrees):
         if TASK_PARTS.STOP_PART == self.task_part and not self.stop_sign_finished and min_distance <= 0.3 and (45 < angle_degrees < 55):
-            self.pub_flow_mode.publish(TASK_PARTS.BIG_PART)
+            self.pub_flow_task.publish(TASK_PARTS.BIG_PART)
             self.stop_sign_finished = True
             self.moving_mode.publish(False)
     
@@ -154,7 +154,7 @@ class DetectObstacleToRight:
             rospy.loginfo("go right")
             msg_moving = MovingParam()
             msg_moving.moving_type=3
-            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_angular=80
             msg_moving.moving_value_linear=0.0
             self.pub_moving.publish(msg_moving)
             while True:
@@ -180,7 +180,7 @@ class DetectObstacleToRight:
             rospy.loginfo("go left")
             msg_moving = MovingParam()
             msg_moving.moving_type=2
-            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_angular=85
             msg_moving.moving_value_linear=0.0
             self.pub_moving.publish(msg_moving)
             while True:
@@ -190,12 +190,14 @@ class DetectObstacleToRight:
 
             rospy.sleep(1)
             
-            self.pub_flow_mode.publish(5)
+            # self.pub_flow_task.publish(5)
             self.is_first = False
             self.moving_mode.publish(True)
             
     def go_to_center_for_dynamic_turn(self, min_distance, angle_degrees):
         if self.task_part == TASK_PARTS.BIG_PART and self.is_in_big_turn  and min_distance < 0.28 and (20 > angle_degrees or angle_degrees > 355):
+           
+            print("SELF_BIG_PART", min_distance,angle_degrees )
             self.is_in_big_turn = False
 
             self.is_parking_turn = True 
@@ -204,7 +206,7 @@ class DetectObstacleToRight:
             
             msg_moving = MovingParam()
             msg_moving.moving_type=2
-            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_angular=85
             self.pub_moving.publish(msg_moving)
 
             rospy.sleep(5)
@@ -218,7 +220,7 @@ class DetectObstacleToRight:
             print("GO FORWARD")
             msg_moving = MovingParam()
             msg_moving.moving_type= 4
-            msg_moving.moving_value_linear= 0.32
+            msg_moving.moving_value_linear= 0.3
             self.pub_moving.publish(msg_moving)
             
             while True:
@@ -230,7 +232,7 @@ class DetectObstacleToRight:
             
             msg_moving = MovingParam()
             msg_moving.moving_type=3
-            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_angular=85
             self.pub_moving.publish(msg_moving)
             
             while True:
@@ -241,7 +243,7 @@ class DetectObstacleToRight:
             msg_moving = MovingParam()
             msg_moving.moving_type=4
             msg_moving.moving_value_angular=0
-            msg_moving.moving_value_linear= 0.22
+            msg_moving.moving_value_linear= 0.25
             self.pub_moving.publish(msg_moving)
             
             while True:

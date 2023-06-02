@@ -54,7 +54,7 @@ class DetectSign():
             # publishes traffic sign image in raw type
             self.pub_image_traffic_sign = rospy.Publisher('/detect/image_output', Image, queue_size = 1)
         self.cvBridge = CvBridge()
-
+        self.counter= 0
     def fnPreproc(self):
         # Initiate SIFT detector
         self.sift = cv2.SIFT_create()
