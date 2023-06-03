@@ -1,9 +1,9 @@
 <launch>
   <arg name="mission" default="traffic_light" doc="mission type [traffic_light, intersection, construction, parking, level_crossing, tunnel]"/>
+    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="main_core_mode_decider" name="main_core_mode_decider" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="main_core_node_controller" name="main_core_node_controller" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="cycle_core_node_controller" name="cycle_core_node_controller" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="intersection_core_node_controller" name="intersection_core_node_controller" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="stop_core_node_controller" name="stop_core_node_controller" output="screen"/>
-    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
 </launch>

@@ -39,17 +39,25 @@ class ControlLane():
         self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
         self.pub_centered = rospy.Publisher('/control/centered', Bool, queue_size= 1)
         self.pub_stopped = rospy.Publisher('/control/stopped', Bool, queue_size= 1)
-        self.moving_mode = rospy.Subscriber("/control/traffic_light", Bool, self.trafficLight, queue_size= 1 )    
+        self.moving_mode = rospy.Subscriber("/control/traffic_light", Bool, self.trafficLight, queue_size= 1 ) 
+        self.finish_traffic = False
+        def finishStop(msg):
+            self.finish_traffic = True
+        self.finish_traffic_light = rospy.Subscriber("/control/finish_traffic_light", Bool, finishStop,queue_size= 1 )   
         self.is_moving = True
         self.is_centered = False
         self.lastError = 0
         self.MAX_VEL =0.05
         self.is_light = True
+        self.light_all = 0
         rospy.on_shutdown(self.fnShutDown)
 
     def trafficLight(self, light):
         self.is_light = bool(light.data)
-        
+        if self.is_light == False:
+            self.light_all += 1
+            if self.light_all >= 2:
+                self.is_light = True
     def setMoving(self, is_moving):
         print("PUBlISH MOVEMENT {}".format( bool(is_moving.data)))
         self.is_moving = bool(is_moving.data)
@@ -59,7 +67,7 @@ class ControlLane():
 
     
     def cbFollowLane(self, desired_center): 
-        if self.is_light:           
+        if self.is_light or self.finish_traffic:           
                 center = desired_center.data
                 error = center - 500           
             
@@ -86,6 +94,8 @@ class ControlLane():
                 else:
                     self.fnShutDown()
                     self.pub_stopped.publish(True)
+        else:
+            self.fnShutDown()
                 
     def fnShutDown(self,x= 0 ,  angle = 0):
         # rospy.loginfo("Shutting down. cmd_vel will be 0")

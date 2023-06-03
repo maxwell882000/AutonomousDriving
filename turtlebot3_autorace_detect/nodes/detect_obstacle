@@ -22,6 +22,7 @@ class DetectObstacleToRight:
         self.pub_flow_mode = rospy.Publisher('/core/flow_mode', Int32, queue_size=1)
         self.sub_flow_mode = rospy.Subscriber('/core/flow_mode', Int32, self.setMode, queue_size=1)
         self.update_mode = rospy.Publisher("/control/update_lane", Bool, queue_size= 1)
+        self.finish_traffic_light = rospy.Publisher("/control/finish_traffic_light", Bool, queue_size= 1 )
         self.once = True
         self.go_forward = True
         self.stopped_once = True
@@ -98,6 +99,7 @@ class DetectObstacleToRight:
                 ) or (not self.is_first and 1.04 < min_distance < 1.3 and 270 < angle_degrees < 300):  # 0.5 meters
                 print(min_distance, angle_degrees)
                 self.moving_mode.publish(False)
+                self.finish_traffic_light.publish(True)
                 if self.is_first == False: 
                     self.cycle_finished = True
                     self.pub_flow_mode.publish(-10)
