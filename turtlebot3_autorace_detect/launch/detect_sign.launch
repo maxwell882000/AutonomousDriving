@@ -10,7 +10,7 @@
 -->
 
 <launch>
-  <!-- traffic sign detection -->
+  <!-- traffic sign detection --> 
   <arg name="mission" default=" "/>
     <node pkg="turtlebot3_autorace_detect" type="detect_cycle_sign" name="detect_cycle_sign" output="screen">
       <remap from="/detect/image_input" to="/camera/image_compensated" />

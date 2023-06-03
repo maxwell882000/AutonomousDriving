@@ -122,7 +122,7 @@ class DetectSign():
                 msg_sign.data = SIGNS.STOP
                 self.pub_traffic_sign.publish(msg_sign)
 
-                rospy.loginfo("stop")
+                # rospy.loginfo("stop")
 
         else:
             matchesMask_stop = None

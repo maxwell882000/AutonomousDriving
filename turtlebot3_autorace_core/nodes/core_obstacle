@@ -31,7 +31,7 @@ class DetectObstacleToRight:
         self.pub_flow_task = rospy.Publisher('/core/flow_task', Int32, queue_size=1)
         self.sub_flow_task = rospy.Subscriber('/core/flow_task', Int32, self.setTaskPart, queue_size=1)
         self.update_mode = rospy.Publisher("/control/update_lane", Bool, queue_size= 1)
-
+        self.stop_traffic = rospy.Publisher("/control/stop_traffic", Bool, queue_size= 1)
         
     
     @property
@@ -110,10 +110,12 @@ class DetectObstacleToRight:
                 print(min_distance, angle_degrees)
                 self.moving_mode.publish(False)
                 print("Obstacle detected to the right!")
-                
+                self.stop_traffic.publish(True)
                 if self.is_start_cycle == False: 
                     self.cycle_finished = True
                     self.pub_flow_task.publish(TASK_PARTS.STOP_PART)
+                    rospy.sleep(4)
+                    self.pub_moving.publish(True)
                     
                 if self.is_start_cycle == False:
                     self.is_start_cycle = None
@@ -256,7 +258,7 @@ class DetectObstacleToRight:
             self.pub_flow_task.publish(TASK_PARTS.TURNS)
             self.moving_mode.publish(True)
             self.update_mode.publish(True)
-            rospy.sleep(10) # required to start turn after it will pass some distance
+            rospy.sleep(6) # required to start turn after it will pass some distance
             self.moving_mode.publish(False)
             self.stopped_mode.publish(True)
             
@@ -265,11 +267,12 @@ class DetectObstacleToRight:
             print("PARKING TURNS ")
             self.stopped_once = False
             self.moving_mode.publish(False)
-            self.stopped_mode.publish(True)            
+            self.stopped_mode.publish(True) 
+            self.pub_flow_task.publish(TASK_PARTS.PARKING)       
             # rospy.sleep(4)
             
     def parking_finished(self, min_distance):
-        if self.is_parking and min_distance < 0.15:
+        if self.is_parking and min_distance < 0.3:
             self.moving_mode.publish(False)
             
     def main(self):

@@ -49,7 +49,7 @@ class DetectCycling():
         msg_moving = MovingParam()
         msg_moving.moving_type= 4
         msg_moving.moving_value_angular=0.0
-        msg_moving.moving_value_linear=0.53
+        msg_moving.moving_value_linear=0.55
         self.pub_moving.publish(msg_moving)
         while True:
             if self.is_moving_complete == True:

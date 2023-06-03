@@ -26,7 +26,7 @@ from geometry_msgs.msg import Twist
 from turtlebot3_autorace_msgs.msg import MovingParam
 
 
-SPEED = 0.03
+SPEED = 0.05
 ROTATE  = 0.38
 
 class ControlLane():
@@ -39,6 +39,10 @@ class ControlLane():
         self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
         self.pub_centered = rospy.Publisher('/control/centered', Bool, queue_size= 1)
         self.pub_stopped = rospy.Publisher('/control/stopped', Bool, queue_size= 1)
+        self.stop_traffic = False
+        def stopTraffic(msg):
+            self.stop_traffic = True
+        self.sub_stop = rospy.Subscriber('/control/stop_traffic', Bool,stopTraffic , queue_size= 1  )
         self.moving_mode = rospy.Subscriber("/control/traffic_light", Bool, self.trafficLight, queue_size= 1 )    
         self.is_moving = True
         self.lastError = 0
@@ -59,8 +63,8 @@ class ControlLane():
 
     
     def cbFollowLane(self, desired_center): 
-        print(self.is_light, self.is_moving, "MOVE ")
-        if self.is_light:           
+        print(self.is_light, self.is_moving, self.stop_traffic , "MOVE ")
+        if self.is_light or self.stop_traffic:           
             center = desired_center.data
             error = center - 500           
         

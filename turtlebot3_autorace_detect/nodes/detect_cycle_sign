@@ -131,7 +131,7 @@ class DetectSign():
                 
                 msg_sign.data = SIGNS.CYCLE               
                 self.pub_traffic_sign.publish(msg_sign)
-                rospy.loginfo("cycle")
+                # rospy.loginfo("cycle")
                 image_out_num = 2
 
         else:
