@@ -46,73 +46,11 @@ class DetectIntersection():
     def cbMovingComplete(self, data):
         self.is_moving_complete = True
    
-    def avoid_obstacle_turn(self):
-        self.is_avoid_obstacle = False
-        while True:
-            if self.is_moving_complete == True:
-                break
-        self.is_moving_complete = False
-                
-        rospy.loginfo("go straight")
-        msg_moving = MovingParam()
-        msg_moving.moving_type=4
-        msg_moving.moving_value_angular=0
-        msg_moving.moving_value_linear= 0.1
-        self.pub_moving.publish(msg_moving)
-        
-        while True:
-            if self.is_moving_complete == True:
-                break
-        self.is_moving_complete = False
-
-        rospy.sleep(1)
-
-        rospy.loginfo("go right")
-        msg_moving = MovingParam()
-        msg_moving.moving_type=3
-        msg_moving.moving_value_angular=60
-        msg_moving.moving_value_linear=0.0
-        self.pub_moving.publish(msg_moving)
-        while True:
-            if self.is_moving_complete == True:
-                break
-        self.is_moving_complete = False
-
-        rospy.sleep(1)
-
-        rospy.loginfo("go straight")
-        msg_moving = MovingParam()
-        msg_moving.moving_type=4
-        msg_moving.moving_value_angular=0
-        msg_moving.moving_value_linear=0.24
-        self.pub_moving.publish(msg_moving)
-        while True:
-            if self.is_moving_complete == True:
-                break
-        self.is_moving_complete = False
-    
-        rospy.sleep(1)
-        
-        rospy.loginfo("go left")
-        msg_moving = MovingParam()
-        msg_moving.moving_type=2
-        msg_moving.moving_value_angular=90
-        msg_moving.moving_value_linear=0.0
-        self.pub_moving.publish(msg_moving)
-        while True:
-            if self.is_moving_complete == True:
-                break
-        self.is_moving_complete = False
-
-        rospy.sleep(1)
-        
-        # self.pub_flow_task.publish(TASK_PARTS.TURNS)
-
     def turn_right(self):
         msg_moving = MovingParam()
         msg_moving.moving_type=4
         msg_moving.moving_value_angular=0
-        msg_moving.moving_value_linear= 0.24
+        msg_moving.moving_value_linear= 0.12
         self.pub_moving.publish(msg_moving)
         
         while True:
@@ -125,7 +63,7 @@ class DetectIntersection():
         rospy.loginfo("go right")
         msg_moving = MovingParam()
         msg_moving.moving_type=3
-        msg_moving.moving_value_angular=90
+        msg_moving.moving_value_angular=85
         msg_moving.moving_value_linear=0.0
         self.pub_moving.publish(msg_moving)
         while True:
@@ -138,7 +76,7 @@ class DetectIntersection():
         msg_moving = MovingParam()
         msg_moving.moving_type=4
         msg_moving.moving_value_angular=0
-        msg_moving.moving_value_linear= 0.2
+        msg_moving.moving_value_linear= 0.15
         self.pub_moving.publish(msg_moving)
         
         while True:
@@ -159,7 +97,7 @@ class DetectIntersection():
             msg_moving = MovingParam()
             msg_moving.moving_type=4
             msg_moving.moving_value_angular=0
-            msg_moving.moving_value_linear=0.1
+            msg_moving.moving_value_linear=0.12
             self.pub_moving.publish(msg_moving)
             while True:
                 if self.is_moving_complete == True:
@@ -202,12 +140,9 @@ class DetectIntersection():
         
         msg_pub_intersection_return = UInt8()
         if int(order.data) == SIGNS.RIGHT:
-            if self.is_avoid_obstacle:
-                self.avoid_obstacle_turn()
-            else:
-                self.turn_right()
+            self.turn_right()
                 
-        elif order.data == SIGNS.LEFT:
+        elif int(order.data) == SIGNS.LEFT:
             self.turn_left()
             
         msg_pub_intersection_return.data = self.StepOfIntersection.exit.value

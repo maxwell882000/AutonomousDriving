@@ -1,5 +1,6 @@
 <launch>
   <!-- launch turtlebot3_autorace_camera_calibration.launch in the raspberry pi before launch this file -->
+    <arg name="mode" default="action" doc="mode type [calibration, action]"/>
     <group>
     <!-- image transport from compressed to raw -->
     <node pkg="image_transport" type="republish" name="republish" args="compressed">
@@ -14,7 +15,6 @@
     <remap from="image_raw" to="image" />
     <param name="queue_size" value="20" />
   </node>
-  <arg name="mode" default="action" doc="mode type [calibration, action]"/>
 
   <group ns="camera">
     <!-- image brightness & contrast compensation of ground-projected image -->

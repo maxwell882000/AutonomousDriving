@@ -47,7 +47,7 @@ class ControlLane():
         rospy.on_shutdown(self.fnShutDown)
 
     def trafficLight(self, light):
-        self.is_light = light.data
+        self.is_light = bool(light.data)
         
     def setMoving(self, is_moving):
         self.is_moving = bool(is_moving.data)

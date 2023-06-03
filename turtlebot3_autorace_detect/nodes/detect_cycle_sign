@@ -102,7 +102,7 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
         
-        MIN_MATCH_COUNT = 3
+        MIN_MATCH_COUNT = 4
         MIN_MSE_DECISION = 50000
 
         # find the keypoints and descriptors with SIFT
@@ -136,33 +136,6 @@ class DetectSign():
 
         else:
             matchesMask_cycle = None
-
-
-        if image_out_num == 1:
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_input, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
-
-        elif image_out_num == 2:
-            draw_params = dict(matchColor = (255,0,0), # draw matches in green color
-                            singlePointColor = None,
-                            matchesMask = matchesMask_cycle, # draw only inliers
-                            flags = 2)
-
-            final_cycle = cv2.drawMatches(cv_image_input,kp1,self.img_cycle,self.kp_cycle,good_cycle,None,**draw_params)
-
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_cycle, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_cycle, "bgr8"))
-
 
     def main(self):
         rospy.spin()

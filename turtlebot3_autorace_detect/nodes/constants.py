@@ -5,9 +5,11 @@ class SIGNS:
     CYCLE = 3
     LEFT = 4
     RIGHT = 5
+    STOP = 6
     
 class TASK_PARTS:
     START = 1
     BIG_PART = 2
     TURNS = 3
     PARKING  = 4
+    STOP_PART = 5

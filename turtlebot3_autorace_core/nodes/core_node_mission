@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+#################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#################################################################################
+
+# Authors: Gilbert, Ashe kim
+
+import rospy
+import os
+import time
+import numpy as np
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose
+from std_srvs.srv import Empty
+from gazebo_msgs.srv import SpawnModel, DeleteModel
+from geometry_msgs.msg import Quaternion
+from tf.transformations import quaternion_from_euler
+from std_msgs.msg import Bool
+
+class ControlMission():
+    def __init__(self):
+        self.count_for_second_light = 0
+        self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        self.rate = rospy.Rate(5)
+        self.initial_pose = Pose()
+        self.initial_pose.position.x = -2.479220
+        self.initial_pose.position.y = 3.788990
+        self.second_pose = Pose()
+        self.second_pose.position.x = 3.443165
+        self.second_pose.position.y = 0.707905
+        yaw = -1.596080  # Example yaw value
+
+        # Convert yaw to a quaternion
+        quaternion = quaternion_from_euler(0, 0, yaw)
+        self.current_time = time.time()
+        # Create a Quaternion object
+        orientation = Quaternion()
+        orientation.x = quaternion[0]
+        orientation.y = quaternion[1]
+        orientation.z = quaternion[2]
+        orientation.w = quaternion[3]
+        self.second_pose.orientation = orientation
+        # self.initial_pose = self.second_pose 
+        self.traffic_state = 1
+        self.second_pub = rospy.Publisher('/core/second_half', Bool, queue_size=1)
+        self.loadMissionModel()
+        self.controlMission()
+        
+        
+    def openLight(self, path):
+        light_model = open(path, "r")
+        return light_model.read()
+    
+    def loadMissionModel(self):
+        model_dir_path = os.path.dirname(os.path.realpath(__file__))
+        model_dir_path = model_dir_path.replace(
+            '/turtlebot3_autorace_2020/turtlebot3_autorace_core/nodes',
+            '/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_autorace_2020')
+
+        red_light_path = model_dir_path + '/traffic_light_red/model.sdf'
+        self.red_light_model = self.openLight(red_light_path)
+        self.red_second_light_model = self.openLight(red_light_path)
+        
+        yellow_light_path = model_dir_path + '/traffic_light_yellow/model.sdf'
+    
+        self.yellow_light_model = self.openLight(yellow_light_path)
+        self.yellow_second_light_model = self.openLight(yellow_light_path)
+
+        green_light_path = model_dir_path + '/traffic_light_green/model.sdf'
+        self.green_light_model = self.openLight(green_light_path)
+        self.green_second_light_model = self.openLight(green_light_path)
+        
+      
+
+    def spawn_light(self, red, yellow ,green, pose):
+        if self.traffic_state == 1:  # turn on red light
+            if abs(self.current_time - time.time()) > 5:
+                rospy.wait_for_service('gazebo/spawn_sdf_model')
+                
+                spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
+                spawn_model_prox(
+                    'traffic_light_red',
+                    red,
+                    "robotos_name_space",
+                pose,
+                    "world")
+                
+                del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+                del_model_prox('traffic_light_green')
+                self.traffic_state = 2
+                self.current_time = time.time()
+
+        elif self.traffic_state == 2:
+            if abs(self.current_time - time.time()) > 2:  # turn on yellow light after 3s.
+                rospy.wait_for_service('gazebo/spawn_sdf_model')
+                spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
+                spawn_model_prox(
+                    'traffic_light_yellow',
+                    yellow,
+                    "robotos_name_space",
+                     pose,
+                    "world")
+                del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+                del_model_prox('traffic_light_red')
+                self.traffic_state = 3
+                self.current_time = time.time()
+
+        elif self.traffic_state == 3:
+            if abs(self.current_time - time.time()) > 5:  # turn on green light after 5s.
+                rospy.wait_for_service('gazebo/spawn_sdf_model')
+                spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
+                spawn_model_prox('traffic_light_green',
+                                    green, 
+                                    "robotos_name_space",
+                                   pose,
+                                    "world")
+                del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+                del_model_prox('traffic_light_yellow')
+                self.traffic_state = 1
+                self.current_time = time.time()
+                self.count_for_second_light += 1
+    def controlMission(self):
+        while not rospy.is_shutdown():
+            if self.count_for_second_light < 3:
+                self.spawn_light(self.red_second_light_model, self.yellow_second_light_model, self.green_second_light_model, self.initial_pose)
+            else:
+                self.spawn_light(self.red_light_model, self.yellow_light_model, self.green_light_model, self.second_pose)      
+                self.second_pub.publish(True)      
+                self.rate.sleep()
+
+def main():
+    rospy.init_node('mission_control')
+    try:
+        controlmission = ControlMission()
+    except rospy.ROSInterruptException:
+        pass
+
+if __name__ == '__main__':
+    main()

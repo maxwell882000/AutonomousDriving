@@ -193,7 +193,7 @@ class DetectLane():
         # Bitwise-AND mask and original image
         res = cv2.bitwise_and(image, image, mask = mask)
         
-        self.num_lines = self.countWhiteLines(mask)
+    
         fraction_num = np.count_nonzero(mask)
 
         if self.is_calibration_mode == False:
@@ -234,88 +234,6 @@ class DetectLane():
 
         return fraction_num, mask
     
-    def countWhiteLines(self,mask):
-        binary_image = mask.copy()
-        binary_image[binary_image > 0] = 255  # Set non-zero values to 255 (white)
-
-        # Apply image thresholding to create a binary image
-        _, threshold = cv2.threshold(binary_image, 127, 255, cv2.THRESH_BINARY)
-
-        # Find contours in the binary image
-        _, contours, _= cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Count the number of contours (lines)
-        line_count = len(contours)
-        if line_count == 1:
-            # self.checkLineIsStraight(contours[0])
-            return line_count
-        enough_seen = 0
-        currentCountour = None
-        for c in contours:
-            contour_length = cv2.arcLength(c, closed=True)
-            print(contour_length)
-            if contour_length > 1000:
-                currentCountour = c
-                enough_seen +=1 
-            
-            if enough_seen >= 2 :
-                return 2
-        # self.checkLineIsStraight(currentCountour)
-        return 1
-    
-    def checkLineIsStraight(self, contour):
-        try:
-            [vx, vy, x, y] = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01)
-            # Extract the values of vx and vy from the line
-
-            # Calculate the angle between the line and the horizontal axis (or vertical axis)
-            angle_threshold = 5  # Adjust this value based on your requirements
-
-            angle_deg = np.degrees(np.arctan2(vy, vx))
-            print(angle_deg)
-            if -angle_threshold <= angle_deg <= angle_threshold:
-                self.line_or_curve = "line"
-                self.sideOfContour(contour, [vx, vy, x, y])
-            else:
-                self.line_or_curve = "curve"
-                print("Contour represents a parabolic shape")
-        except:
-            self.line_or_curve = "curve"
-        # Calculate the deviation of the contour points from the fitted line
-        # deviation = 0
-        # for point in contour:
-        #     point = point[0]
-        #     deviation += abs((point[1] - y) * vx - (point[0] - x) * vy) / np.sqrt(vx ** 2 + vy ** 2)
-
-        # # Calculate the average deviation
-        # average_deviation = deviation / len(contour)
-
-        # # Set a threshold to determine if the contour represents a straight line or parabolic shape
-        # threshold = 24  # Adjust this value based on your requirements
-        # print(average_deviation)
-        # # Check if the contour represents a straight line or parabolic shape
-        # if average_deviation < threshold:
-        #     self.line_or_curve = "line"
-        #     self.sideOfContour(contour, [vx, vy, x, y])
-        #     print("Contour represents a straight line")
-        # else:
-        #     self.line_or_curve = "curve"
-        #     print("Contour represents a parabolic shape")
-            
-    def sideOfContour(self, contour, position ):
-        
-        [vx, vy, x, y] = position
-        
-        center_x = self.window_width // 2
-        if x < center_x:
-            self.line_right_or_left = "left"
-            print("Line is located on the left side of the center")
-        elif x > center_x:
-            self.line_right_or_left = "right"
-            print("Line is located on the right side of the center")
-        else:
-            print("Line is located exactly at the center")
-            
             
     def maskYellowLane(self, image):
         # Convert BGR to HSV
@@ -394,40 +312,6 @@ class DetectLane():
         # Generate x and y values for plotting
         ploty = np.linspace(0, image.shape[0] - 1, image.shape[0])
         lane_fitx = lane_fit[0] * ploty ** 2 + lane_fit[1] * ploty + lane_fit[2]
-        print(self.num_lines)
-        if self.num_lines == 1:
-            # if self.line_or_curve == "curve":
-                if lane_fit[0] > 0:
-                    if left_or_right == "left":
-                        print("LEFT")
-                        self.missed_line = "right"
-                        lane_fit = []
-                        self.reliability_white_line = 0
-                else:
-                    if left_or_right == "right":
-                        print("RIGHT")
-                        self.missed_line = "left"
-                        lane_fit =[]
-                        self.reliability_yellow_line = 0
-            # if self.line_or_curve == "line":
-            #     if self.line_right_or_left == "left":
-            #             self.missed_line = "right"
-            #             lane_fit = []
-            #             self.reliability_white_line = 0
-            #     else: 
-            #             self.missed_line = "left"
-            #             lane_fit =[]
-            #             self.reliability_yellow_line = 0
-        else:
-            if self.missed_line == "left":
-                self.right_fit = self.sliding_windown(image, "left")
-                self.mov_avg_right = np.array([self.right_fit])
-                self.missed_line = ""
-            if self.missed_line == "right":
-                print("UPDATED FULLLLY !!!!!")
-                self.left_fit = self.sliding_windown(image, "right")
-                self.mov_avg_left = np.array([self.left_fit])
-                self.missed_line = ""
         return lane_fitx, lane_fit
 
     def  sliding_windown(self, img_w, left_or_right):
@@ -577,7 +461,7 @@ class DetectLane():
         final = cv2.addWeighted(cv_image, 1, color_warp, 0.2, 0)
         final = cv2.addWeighted(final, 1, color_warp_lines, 1, 0)
 
-        # centerx = self.utilize_new_center(centerx, yellow_fraction)
+        centerx = self.utilize_new_center(centerx, yellow_fraction)
             
         
         if self.pub_image_type == "compressed":

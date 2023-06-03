@@ -10,16 +10,16 @@ from turtlebot3_autorace_msgs.msg import MovingParam
 class DetectObstacleToRight:
     def __init__(self) -> None:
         # Initialize ROS node
-       
-        self.is_first = True
+        self.stop_sign_finished = False
+        self.is_start_cycle = True
         self.cycle_finished = False
-        self.once = True
+        self.is_in_big_turn = True
         self.go_forward = True
         self.stopped_once = True
        
         self.mode = SIGNS.IDLE
         self.is_moving_complete = False
-        self.is_after_here = False
+        self.is_parking_turn = False
         self.task_part = 2
         # Subscribe to laser scan data
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
@@ -91,6 +91,8 @@ class DetectObstacleToRight:
     
         self.cycle_sign(min_distance,angle_degrees)
         
+        self.stop_sign(min_distance, angle_degrees)
+        
         self.big_turn(min_distance, angle_degrees)
         
         self.go_to_center_for_dynamic_turn(min_distance,angle_degrees)
@@ -102,67 +104,101 @@ class DetectObstacleToRight:
         
 
     def cycle_sign(self, min_distance, angle_degrees):
-        if not self.cycle_finished and (self.is_cycle or self.is_first == False):
-            if (min_distance <= 0.32 and 83 <= angle_degrees <= 93 and self.is_first 
-                ) or (not self.is_first and 0.70 < min_distance < 0.90 and 260 < angle_degrees < 275):  # 0.5 meters
+        if not self.cycle_finished and (self.is_cycle or self.is_start_cycle == False):
+            if (min_distance <= 0.169 and 45.4 <= angle_degrees <= 54.6 and self.is_start_cycle 
+                ) or (not self.is_start_cycle and 1.04 < min_distance < 1.3 and 270 < angle_degrees < 300):  # 0.5 meters
                 print(min_distance, angle_degrees)
                 self.moving_mode.publish(False)
                 print("Obstacle detected to the right!")
-                if self.is_first == False: 
+                
+                if self.is_start_cycle == False: 
                     self.cycle_finished = True
-                    self.pub_flow_task.publish(TASK_PARTS.BIG_PART)
-                self.is_first = False           
+                    self.pub_flow_task.publish(TASK_PARTS.STOP_PART)
+                    
+                if self.is_start_cycle == False:
+                    self.is_start_cycle = None
+                    
+                if self.is_start_cycle == True:
+                    self.is_start_cycle = False           
 
+    def stop_sign(self, min_distance, angle_degrees):
+        if TASK_PARTS.STOP_PART == self.task_part and not self.stop_sign_finished and min_distance <= 0.3 and (45 < angle_degrees < 55):
+            self.pub_flow_mode.publish(TASK_PARTS.BIG_PART)
+            self.stop_sign_finished = True
+            self.moving_mode.publish(False)
+    
     def big_turn(self, min_distance, angle_degrees):
-        if self.task_part == TASK_PARTS.BIG_PART and self.go_forward and 0.65 < min_distance < 0.76 \
-            and (12 > angle_degrees or angle_degrees > 355):
+        if self.task_part == TASK_PARTS.BIG_PART and self.go_forward and  0.57 < min_distance < 0.60 and (88 < angle_degrees < 93):
             self.go_forward = False
             print("Obstacle detected to the front detected!  {}  {}".format(min_distance , angle_degrees))
             rospy.loginfo("go straight")
                         
-            msg_moving = MovingParam()
-            msg_moving.moving_type=2
-            msg_moving.moving_value_angular= angle_degrees - 12  if angle_degrees < 20 else 0
-            self.pub_moving.publish(msg_moving)
             self.moving_mode.publish(False)
-            while True:
-                if self.is_moving_complete == True:
-                    break
-            self.is_moving_complete = False
-            
-            rospy.sleep(2)
-            
+            rospy.sleep(1)
+    
             msg_moving = MovingParam()
             msg_moving.moving_type=4
             msg_moving.moving_value_angular=0
-            msg_moving.moving_value_linear= 0.3
+            msg_moving.moving_value_linear= 0.4
             self.pub_moving.publish(msg_moving)
             
+            rospy.sleep(6)
+        
             while True:
                 if self.is_moving_complete == True:
                     break
             self.is_moving_complete = False
             
-            rospy.sleep(2)
-
-            self.stopped_mode.publish(True)
             
-    def parking_finished(self, min_distance):
-        if self.is_parking and min_distance < 0.15:
-            self.moving_mode.publish(False)
+
+            rospy.loginfo("go right")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=3
+            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_linear=0.0
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
+
+            rospy.sleep(1)
+
+            rospy.loginfo("go straight")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=4
+            msg_moving.moving_value_angular=0
+            msg_moving.moving_value_linear=0.24
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
         
-    def prepare_to_last_turn(self, min_distance, angle_degrees):
-        if self.stopped_once and self.is_after_here and self.is_turn and 0.3 < min_distance < 0.38 and (20 > angle_degrees or angle_degrees > 355):
-            print("IS stopped mode")
-            self.stopped_once = False
-            self.moving_mode.publish(False)
-            self.stopped_mode.publish(True)
+            rospy.sleep(1)
+            
+            rospy.loginfo("go left")
+            msg_moving = MovingParam()
+            msg_moving.moving_type=2
+            msg_moving.moving_value_angular=90
+            msg_moving.moving_value_linear=0.0
+            self.pub_moving.publish(msg_moving)
+            while True:
+                if self.is_moving_complete == True:
+                    break
+            self.is_moving_complete = False
+
+            rospy.sleep(1)
+            
+            self.pub_flow_mode.publish(5)
+            self.is_first = False
+            self.moving_mode.publish(True)
             
     def go_to_center_for_dynamic_turn(self, min_distance, angle_degrees):
-        if self.task_part == TASK_PARTS.BIG_PART and self.once and 0.33 < min_distance < 0.37 and 135 < angle_degrees < 144:
-            self.once = False
+        if self.task_part == TASK_PARTS.BIG_PART and self.is_in_big_turn  and min_distance < 0.28 and (20 > angle_degrees or angle_degrees > 355):
+            self.is_in_big_turn = False
 
-            self.is_after_here = True 
+            self.is_parking_turn = True 
             self.moving_mode.publish(False)
             rospy.sleep(1)
             
@@ -182,7 +218,7 @@ class DetectObstacleToRight:
             print("GO FORWARD")
             msg_moving = MovingParam()
             msg_moving.moving_type= 4
-            msg_moving.moving_value_linear= 0.2
+            msg_moving.moving_value_linear= 0.32
             self.pub_moving.publish(msg_moving)
             
             while True:
@@ -218,8 +254,22 @@ class DetectObstacleToRight:
             self.pub_flow_task.publish(TASK_PARTS.TURNS)
             self.moving_mode.publish(True)
             self.update_mode.publish(True)
+            rospy.sleep(10) # required to start turn after it will pass some distance
+            self.moving_mode.publish(False)
+            self.stopped_mode.publish(True)
+            
+    def prepare_to_last_turn(self, min_distance, angle_degrees):
+        if self.stopped_once and self.is_parking_turn and self.is_turn and 0.3 < min_distance < 0.38 and (20 > angle_degrees or angle_degrees > 355):
+            print("PARKING TURNS ")
+            self.stopped_once = False
+            self.moving_mode.publish(False)
+            self.stopped_mode.publish(True)            
             # rospy.sleep(4)
-
+            
+    def parking_finished(self, min_distance):
+        if self.is_parking and min_distance < 0.15:
+            self.moving_mode.publish(False)
+            
     def main(self):
         
         # Spin the node

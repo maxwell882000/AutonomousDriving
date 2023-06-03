@@ -103,7 +103,7 @@ class DetectSign():
         elif self.sub_image_type == "raw":
             cv_image_input = self.cvBridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        MIN_MATCH_COUNT = 4 #9
+        MIN_MATCH_COUNT = 9 #9
         MIN_MSE_DECISION = 50000
 
         # find the keypoints and descriptors with SIFT
@@ -166,64 +166,6 @@ class DetectSign():
 
         else:
             matches_right = None
-            # rospy.loginfo("nothing detected")
-
-        if image_out_num == 1:
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(cv_image_input, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(cv_image_input, "bgr8"))
-
-        elif image_out_num == 2:
-            draw_params_intersection = dict(matchColor = (255,0,0), # draw matches in green color
-                        singlePointColor = None,
-                        matchesMask = matches_intersection, # draw only inliers
-                        flags = 2)
-
-            final_intersection = cv2.drawMatches(cv_image_input,kp1,self.img_intersection,self.kp_intersection,good_intersection,None,**draw_params_intersection)
-
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_intersection, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_intersection, "bgr8"))
-
-        elif image_out_num == 3:
-            draw_params_left = dict(matchColor = (255,0,0), # draw matches in green color
-                        singlePointColor = None,
-                        matchesMask = matches_left, # draw only inliers
-                        flags = 2)
-
-            final_left = cv2.drawMatches(cv_image_input,kp1,self.img_left,self.kp_left,good_left,None,**draw_params_left)
-
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(final_left, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(final_left, "bgr8"))
-
-        elif image_out_num == 4:
-            draw_params_right = dict(matchColor = (255,0,0), # draw matches in green color
-                            singlePointColor = None,
-                            matchesMask = matches_right, # draw only inliers
-                            flags = 2)
-
-            fianl_right = cv2.drawMatches(cv_image_input,kp1,self.img_right,self.kp_right,good_right,None,**draw_params_right)
-
-            if self.pub_image_type == "compressed":
-                # publishes traffic sign image in compressed type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_compressed_imgmsg(fianl_right, "jpg"))
-
-            elif self.pub_image_type == "raw":
-                # publishes traffic sign image in raw type
-                self.pub_image_traffic_sign.publish(self.cvBridge.cv2_to_imgmsg(fianl_right, "bgr8"))
 
     def main(self):
         rospy.spin()

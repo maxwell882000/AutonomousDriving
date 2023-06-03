@@ -58,7 +58,9 @@ class CoreNodeController():
         self.is_stopped = bool(is_stopped.data)
         
     def cbReceiveMode(self, mode_msg):
-        self.current_mode = mode_msg.data
+        if not (self.current_mode == SIGNS.LEFT and 
+            self.current_mode == SIGNS.RIGHT ):
+            self.current_mode = mode_msg.data
 
     def cbIntersectionStamped(self, intersection_msg):
         self.current_mode = SIGNS.LANE_FOLLOWING

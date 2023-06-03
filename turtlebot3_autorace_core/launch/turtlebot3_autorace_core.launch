@@ -5,4 +5,6 @@
     <node pkg="turtlebot3_autorace_core" type="cycle_controller" name="cycle_controller" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="turn_controller" name="turn_controller" output="screen"/>
     <node pkg="turtlebot3_autorace_core" type="core_obstacle" name="core_obstacle" output="screen"/>
+    <node pkg="turtlebot3_autorace_core" type="stop_core_node_controller" name="stop_core_node_controller" output="screen"/>
+    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
 </launch>

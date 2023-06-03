@@ -58,6 +58,10 @@ class CoreModeDecider():
                 rospy.loginfo("currentmode : cycle detected")
                 self.current_mode =  SIGNS.CYCLE
             
+            if self.task_part == TASK_PARTS.STOP and msg_data.data == SIGNS.STOP:
+                rospy.loginfo("currentmode : stop detected")
+                self.current_mode =  SIGNS.STOP
+            
             if self.task_part == TASK_PARTS.PARKING and msg_data.data == SIGNS.PARKING:
                 rospy.loginfo("currentmode : parking detected")
                 self.current_mode =  SIGNS.PARKING
