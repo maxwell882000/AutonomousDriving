@@ -54,10 +54,7 @@ class ControlLane():
 
     def trafficLight(self, light):
         self.is_light = bool(light.data)
-        if self.is_light == False:
-            self.light_all += 1
-            if self.light_all >= 2:
-                self.is_light = True
+   
     def setMoving(self, is_moving):
         print("PUBlISH MOVEMENT {}".format( bool(is_moving.data)))
         self.is_moving = bool(is_moving.data)
