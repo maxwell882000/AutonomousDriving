@@ -106,7 +106,7 @@ class ControlMission():
             self.current_time = time.time()
 
         elif self.traffic_state == 2:
-            if abs(self.current_time - time.time()) > 3:  # turn on yellow light after 3s.
+            if abs(self.current_time - time.time()) > 10:  # turn on yellow light after 3s.
                 rospy.wait_for_service('gazebo/spawn_sdf_model')
                 spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
                 spawn_model_prox(
@@ -121,7 +121,7 @@ class ControlMission():
                 self.current_time = time.time()
 
         elif self.traffic_state == 3:
-            if abs(self.current_time - time.time()) > 3:  # turn on green light after 5s.
+            if abs(self.current_time - time.time()) > 5:  # turn on green light after 5s.
                 rospy.wait_for_service('gazebo/spawn_sdf_model')
                 spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
                 spawn_model_prox('traffic_light_green',
@@ -135,7 +135,7 @@ class ControlMission():
                 self.current_time = time.time()
                 self.counter += 1
         elif self.traffic_state == 4:
-            if abs(self.current_time - time.time()) > 3:
+            if abs(self.current_time - time.time()) > 10:
                 self.current_time = time.time()
                 self.traffic_state = 1
                 
