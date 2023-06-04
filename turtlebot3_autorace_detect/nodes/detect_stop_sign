@@ -108,7 +108,7 @@ class DetectSign():
             if m.distance < 0.7*n.distance:
                 good_stop.append(m)
                 
-        print( "STOP SIGN ", len(good_stop))
+        # print( "STOP SIGN ", len(good_stop))
         if len(good_stop) >= MIN_MATCH_COUNT:
             src_pts = np.float32([ kp1[m.queryIdx].pt for m in good_stop ]).reshape(-1,1,2)
             dst_pts = np.float32([ self.kp_stop[m.trainIdx].pt for m in good_stop ]).reshape(-1,1,2)
@@ -126,7 +126,6 @@ class DetectSign():
 
         else:
             matchesMask_stop = None
-            rospy.loginfo("nothing")
 
 
 

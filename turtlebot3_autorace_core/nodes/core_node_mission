@@ -88,24 +88,21 @@ class ControlMission():
 
     def spawn_light(self, red, yellow ,green, pose):
         if self.traffic_state == 1:  # turn on red light
-            if abs(self.current_time - time.time()) > 5:
-                rospy.wait_for_service('gazebo/spawn_sdf_model')
-                
-                spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
-                spawn_model_prox(
-                    'traffic_light_red',
-                    red,
-                    "robotos_name_space",
-                pose,
-                    "world")
-                
-                del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
-                del_model_prox('traffic_light_green')
-                self.traffic_state = 2
-                self.current_time = time.time()
+            rospy.wait_for_service('gazebo/spawn_sdf_model')
+            spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
+            spawn_model_prox(
+                'traffic_light_red',
+                red,
+                "robotos_name_space",
+            pose,
+                "world")
+            del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+            del_model_prox('traffic_light_green')
+            self.traffic_state = 2
+            self.current_time = time.time()
 
         elif self.traffic_state == 2:
-            if abs(self.current_time - time.time()) > 2:  # turn on yellow light after 3s.
+            if abs(self.current_time - time.time()) > 10:  # turn on yellow light after 3s.
                 rospy.wait_for_service('gazebo/spawn_sdf_model')
                 spawn_model_prox = rospy.ServiceProxy('gazebo/spawn_sdf_model', SpawnModel)
                 spawn_model_prox(
@@ -130,9 +127,15 @@ class ControlMission():
                                     "world")
                 del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
                 del_model_prox('traffic_light_yellow')
-                self.traffic_state = 1
+                self.traffic_state = 4
                 self.current_time = time.time()
                 self.count_for_second_light += 1
+
+        elif self.traffic_state == 4:
+            if abs(self.current_time - time.time()) > 10:
+                self.current_time = time.time()
+                self.traffic_state = 1
+
     def controlMission(self):
         while not rospy.is_shutdown():
             if self.count_for_second_light < 3:

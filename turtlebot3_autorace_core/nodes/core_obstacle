@@ -20,7 +20,7 @@ class DetectObstacleToRight:
         self.mode = SIGNS.IDLE
         self.is_moving_complete = False
         self.is_parking_turn = False
-        self.task_part = TASK_PARTS.BIG_PART
+        self.task_part = TASK_PARTS.START
         # Subscribe to laser scan data
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.moving_mode = rospy.Publisher("/control/is_moving", Bool, queue_size= 1)

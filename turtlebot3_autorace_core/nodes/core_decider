@@ -37,7 +37,7 @@ class CoreModeDecider():
         
         self.sub_flow_task = rospy.Subscriber('/core/flow_task', Int32, self.setFlowTask, queue_size=1)
         
-        self.task_part = TASK_PARTS.BIG_PART
+        self.task_part = TASK_PARTS.START
         
         self.fnInitMode()
 
@@ -66,7 +66,8 @@ class CoreModeDecider():
                 rospy.loginfo("currentmode : parking detected")
                 self.current_mode =  SIGNS.PARKING
                 
-            if self.task_part == TASK_PARTS.TURNS and msg_data.data == SIGNS.LEFT:         # Parking Sign detected
+            if (self.task_part == TASK_PARTS.BIG_PART or self.task_part == TASK_PARTS.TURNS) \
+                  and msg_data.data == SIGNS.LEFT:         # Parking Sign detected
                 rospy.loginfo("currentmode : left detected")
                 self.current_mode =  SIGNS.LEFT
                     

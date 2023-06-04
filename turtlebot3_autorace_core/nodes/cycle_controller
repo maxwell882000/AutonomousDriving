@@ -62,15 +62,14 @@ class CoreNodeController():
 
         
     def cbCyclingStamped(self, cycling_msg):
-        
+        print("RETURNED CYCLE")
         self.current_mode = SIGNS.LANE_FOLLOWING
         msg_mode_return = UInt8()
         msg_mode_return.data = self.current_mode
         self.pub_mode_return.publish(msg_mode_return)
         self.is_stopped = False
-        self.stopped_mode.publish(False)
         self.moving_mode.publish(True)
-            
+        self.stopped_mode.publish(False) 
     def main(self):
         rospy.spin()
 
